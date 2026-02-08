@@ -327,6 +327,39 @@ describe('usePty', () => {
     expect(result.current.isConnected).toBe(true)
   })
 
+  // ===== Rust JSON shape matching =====
+
+  it('should correctly decode Output event matching Rust serde JSON shape', async () => {
+    // Rust: PtyEvent::Output { data: vec![72,101,108,108,111] }
+    // serde(tag="event", content="data") → {"event":"Output","data":{"data":[72,101,108,108,111]}}
+    const onData = vi.fn()
+    const { result } = await importAndRender({ onData })
+
+    await act(async () => {
+      await result.current.spawn({
+        command: null,
+        args: [],
+        cwd: null,
+        env: {},
+        cols: 80,
+        rows: 24,
+      })
+    })
+
+    act(() => {
+      sendChannelEvent({
+        event: 'Output',
+        data: { data: [72, 101, 108, 108, 111] },
+      })
+    })
+
+    expect(onData).toHaveBeenCalledTimes(1)
+    const firstCall = onData.mock.calls.at(0)
+    if (!firstCall) throw new Error('onData was not called')
+    const decoded = new TextDecoder().decode(firstCall[0])
+    expect(decoded).toBe('Hello')
+  })
+
   // ===== User Scenario: Exit event during ptySpawn await (race condition) =====
 
   it('should stay disconnected when Exit arrives during ptySpawn await', async () => {

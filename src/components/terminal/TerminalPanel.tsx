@@ -27,6 +27,12 @@ export function TerminalPanel() {
   } = usePty({
     onData: data => {
       const decoded = decoderRef.current.decode(data, { stream: true })
+      console.debug(
+        '[terminal] PTY output:',
+        decoded.length,
+        'chars, writeRef:',
+        !!writeRef.current
+      )
       if (writeRef.current) {
         writeRef.current(decoded)
       } else {

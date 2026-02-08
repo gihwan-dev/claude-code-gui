@@ -187,23 +187,30 @@ impl PtyManager {
                     match reader.read(&mut buf) {
                         Ok(0) => {
                             // EOF — child process has exited
-                            let _ = channel.send(PtyEvent::Exit { code: None });
+                            if let Err(e) = channel.send(PtyEvent::Exit { code: None }) {
+                                log::error!("PTY channel.send failed for Exit: {e:?}");
+                            }
                             break;
                         }
                         Ok(n) => {
-                            let _ = channel.send(PtyEvent::Output {
+                            if let Err(e) = channel.send(PtyEvent::Output {
                                 data: buf[..n].to_vec(),
-                            });
+                            }) {
+                                log::error!("PTY channel.send failed for Output: {e:?}");
+                                break;
+                            }
                         }
                         Err(e) => {
                             // On macOS/Linux, EIO (errno 5) is expected when the child exits
                             if e.kind() == std::io::ErrorKind::Other || e.raw_os_error() == Some(5)
                             {
-                                let _ = channel.send(PtyEvent::Exit { code: None });
-                            } else {
-                                let _ = channel.send(PtyEvent::Error {
-                                    message: e.to_string(),
-                                });
+                                if let Err(send_err) = channel.send(PtyEvent::Exit { code: None }) {
+                                    log::error!("PTY channel.send failed for Exit: {send_err:?}");
+                                }
+                            } else if let Err(send_err) = channel.send(PtyEvent::Error {
+                                message: e.to_string(),
+                            }) {
+                                log::error!("PTY channel.send failed for Error: {send_err:?}");
                             }
                             break;
                         }
@@ -913,6 +920,72 @@ mod tests {
         );
 
         manager.kill(&session_id).unwrap();
+    }
+
+    #[test]
+    fn test_pty_event_json_matches_frontend_types() {
+        // Output event — frontend expects: {"event":"Output","data":{"data":[...]}}
+        let event = PtyEvent::Output {
+            data: vec![72, 101, 108],
+        };
+        let value: serde_json::Value = serde_json::to_value(&event).unwrap();
+        assert_eq!(value["event"], "Output");
+        assert!(value["data"]["data"].is_array());
+        assert_eq!(value["data"]["data"], serde_json::json!([72, 101, 108]));
+
+        // Exit event with code
+        let event = PtyEvent::Exit { code: Some(0) };
+        let value: serde_json::Value = serde_json::to_value(&event).unwrap();
+        assert_eq!(value["event"], "Exit");
+        assert_eq!(value["data"]["code"], 0);
+
+        // Exit event with null code
+        let event = PtyEvent::Exit { code: None };
+        let value: serde_json::Value = serde_json::to_value(&event).unwrap();
+        assert_eq!(value["event"], "Exit");
+        assert!(value["data"]["code"].is_null());
+
+        // Error event
+        let event = PtyEvent::Error {
+            message: "test error".to_string(),
+        };
+        let value: serde_json::Value = serde_json::to_value(&event).unwrap();
+        assert_eq!(value["event"], "Error");
+        assert_eq!(value["data"]["message"], "test error");
+    }
+
+    #[test]
+    fn test_channel_serialization_roundtrip() {
+        let (tx, rx) = mpsc::channel::<String>();
+        let channel = Channel::new(move |body: InvokeResponseBody| {
+            if let InvokeResponseBody::Json(json_str) = body {
+                let _ = tx.send(json_str);
+            }
+            Ok(())
+        });
+
+        channel
+            .send(PtyEvent::Output {
+                data: vec![72, 101],
+            })
+            .unwrap();
+        let json = rx.recv_timeout(std::time::Duration::from_secs(1)).unwrap();
+        let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(value["event"], "Output");
+        assert_eq!(value["data"]["data"], serde_json::json!([72, 101]));
+    }
+
+    #[test]
+    fn test_spawn_options_from_frontend_json() {
+        let json = r#"{"command":null,"args":[],"cwd":null,"env":{},"cols":80,"rows":38}"#;
+        let options: SpawnOptions = serde_json::from_str(json).unwrap();
+        assert!(options.command.is_none());
+        assert!(options.args.is_empty());
+        assert!(options.cwd.is_none());
+        assert!(options.env.is_empty());
+        assert_eq!(options.cols, 80);
+        assert_eq!(options.rows, 38);
     }
 
     #[test]

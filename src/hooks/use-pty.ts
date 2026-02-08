@@ -45,6 +45,13 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
     const channel = new Channel<PtyEvent>()
     channelRef.current = channel
     channel.onmessage = event => {
+      console.debug(
+        '[pty] channel event:',
+        event.event,
+        event.event === 'Output'
+          ? `${event.data.data.length} bytes`
+          : JSON.stringify(event.data)
+      )
       if (event.event === 'Output') {
         onDataRef.current?.(new Uint8Array(event.data.data))
       } else if (event.event === 'Exit') {
