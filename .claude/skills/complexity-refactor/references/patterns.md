@@ -155,8 +155,13 @@ function calculateDiscount(userType: string, amount: number) {
 ### Before
 
 ```typescript
-if (user.age >= 18 && user.hasId && !user.isBanned && user.emailVerified &&
-    (user.subscription === 'premium' || user.trialDaysLeft > 0)) {
+if (
+  user.age >= 18 &&
+  user.hasId &&
+  !user.isBanned &&
+  user.emailVerified &&
+  (user.subscription === 'premium' || user.trialDaysLeft > 0)
+) {
   // ...
 }
 ```
@@ -226,10 +231,10 @@ function displayUserInfo(user: User | null) {
 
 ## 패턴 선택 가이드
 
-| 상황 | 추천 패턴 |
-|------|----------|
-| 중첩된 if-else | Early Return |
-| 50줄 이상 긴 함수 | Step-by-Step |
-| 5개 이상 switch/case | Strategy |
-| 복잡한 조건식 | Extract Condition |
-| 반복되는 null 체크 | Null Object |
+| 상황                 | 추천 패턴         |
+| -------------------- | ----------------- |
+| 중첩된 if-else       | Early Return      |
+| 50줄 이상 긴 함수    | Step-by-Step      |
+| 5개 이상 switch/case | Strategy          |
+| 복잡한 조건식        | Extract Condition |
+| 반복되는 null 체크   | Null Object       |

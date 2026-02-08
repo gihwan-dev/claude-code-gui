@@ -41,6 +41,7 @@ argument: $ARGUMENTS
 **clientFrameworks:** `react`
 
 **에러 처리:**
+
 - MCP 도구 호출 실패 시: "Figma Desktop 앱을 실행하고 해당 파일을 열어주세요." 안내
 
 ### Phase 3. 참조 패턴 탐색
@@ -73,15 +74,15 @@ argument: $ARGUMENTS
 **타이포그래피:**
 
 | Figma 크기 | Tailwind 클래스 |
-|---|---|
-| 28px/140% | `text-header-1` |
-| 24px/140% | `text-header-2` |
-| 20px/140% | `text-title-1` |
-| 18px/140% | `text-title-2` |
-| 16px/140% | `text-body-1` |
-| 14px/140% | `text-body-2` |
-| 12px/140% | `text-body-3` |
-| 11px/140% | `text-caption` |
+| ---------- | --------------- |
+| 28px/140%  | `text-header-1` |
+| 24px/140%  | `text-header-2` |
+| 20px/140%  | `text-title-1`  |
+| 18px/140%  | `text-title-2`  |
+| 16px/140%  | `text-body-1`   |
+| 14px/140%  | `text-body-2`   |
+| 12px/140%  | `text-body-3`   |
+| 11px/140%  | `text-caption`  |
 
 폰트 두께: `font-regular`(400), `font-medium`(500), `font-semibold`(600), `font-bold`(700)
 
@@ -126,19 +127,24 @@ Phase 2~4의 분석 결과를 기반으로 컴포넌트 코드를 생성합니�
 **코드 구조 예시:**
 
 ```tsx
-import { cn } from '@/shared/util';
+import { cn } from '@/shared/util'
 
 interface MyComponentProps {
-  className?: string;
-  title: string;
+  className?: string
+  title: string
 }
 
 export function MyComponent({ className, title }: MyComponentProps) {
   return (
-    <div className={cn('flex flex-col gap-2 p-4 bg-surface-primary-default rounded-strong', className)}>
+    <div
+      className={cn(
+        'flex flex-col gap-2 p-4 bg-surface-primary-default rounded-strong',
+        className
+      )}
+    >
       <span className="text-body-1 font-medium text-text-primary">{title}</span>
     </div>
-  );
+  )
 }
 ```
 
@@ -172,12 +178,12 @@ Figma → Code 완료: {ComponentName}
 
 ## 에러 처리
 
-| 상황 | 대응 |
-|------|------|
-| Figma URL 형식 오류 | URL에서 `node-id` 파라미터를 찾을 수 없다고 안내, 올바른 URL 형식 예시 제공 |
-| MCP 도구 호출 실패 | "Figma Desktop 앱을 실행하고 해당 파일을 열어주세요." 안내 |
-| 대상 파일이 비어있지 않음 | 사용자에게 덮어쓸지 확인 |
-| 매핑 불가 색상 | 가장 가까운 토큰 사용 + `/* TODO: exact color #XXXXXX */` 코멘트 |
+| 상황                      | 대응                                                                        |
+| ------------------------- | --------------------------------------------------------------------------- |
+| Figma URL 형식 오류       | URL에서 `node-id` 파라미터를 찾을 수 없다고 안내, 올바른 URL 형식 예시 제공 |
+| MCP 도구 호출 실패        | "Figma Desktop 앱을 실행하고 해당 파일을 열어주세요." 안내                  |
+| 대상 파일이 비어있지 않음 | 사용자에게 덮어쓸지 확인                                                    |
+| 매핑 불가 색상            | 가장 가까운 토큰 사용 + `/* TODO: exact color #XXXXXX */` 코멘트            |
 
 ## 예시
 

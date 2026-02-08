@@ -31,10 +31,10 @@ description: |
 
 #### 모드 선택 기준
 
-| 조건 | 모드 | 설명 |
-|------|------|------|
-| 1-2개 단순 문제점 | Standard Mode | 기존 sequential-thinking 3회 방식 |
-| 3개 이상 또는 복잡한 문제점 | Multi-Perspective Mode | 병렬 sub-agent 3관점 분석 |
+| 조건                        | 모드                   | 설명                              |
+| --------------------------- | ---------------------- | --------------------------------- |
+| 1-2개 단순 문제점           | Standard Mode          | 기존 sequential-thinking 3회 방식 |
+| 3개 이상 또는 복잡한 문제점 | Multi-Perspective Mode | 병렬 sub-agent 3관점 분석         |
 
 ---
 
@@ -86,17 +86,18 @@ sequential-thinking으로 다음을 분석:
 
 ##### 에이전트 구성
 
-| Agent | subagent_type | model | 관점 |
-|-------|---------------|-------|------|
-| Readability Advocate | general-purpose | sonnet | 가독성, 의도의 명확성 |
-| Architecture Purist | typescript-pro | sonnet | 타입 안전성, 패턴 일관성, 구조적 정합성 |
-| Pragmatic Developer | frontend-developer | sonnet | 유지보수성, 실용성, 개발 경험 |
+| Agent                | subagent_type      | model  | 관점                                    |
+| -------------------- | ------------------ | ------ | --------------------------------------- |
+| Readability Advocate | general-purpose    | sonnet | 가독성, 의도의 명확성                   |
+| Architecture Purist  | typescript-pro     | sonnet | 타입 안전성, 패턴 일관성, 구조적 정합성 |
+| Pragmatic Developer  | frontend-developer | sonnet | 유지보수성, 실용성, 개발 경험           |
 
 ##### 실행 방법
 
 3개의 Task sub-agent를 **단일 메시지에서 동시 실행** (`run_in_background: true`):
 
 **Agent: Readability Advocate**
+
 ```
 You are a Readability Advocate analyzing a React refactoring proposal.
 Your lens: code readability, intent clarity, self-documenting code.
@@ -114,6 +115,7 @@ Write your analysis. Focus on whether each change makes the code easier to READ 
 ```
 
 **Agent: Architecture Purist**
+
 ```
 You are an Architecture Purist analyzing a React refactoring proposal.
 Your lens: type safety, pattern consistency, structural integrity, SOLID principles.
@@ -131,6 +133,7 @@ Write your analysis. Focus on whether each change improves TYPE SAFETY and STRUC
 ```
 
 **Agent: Pragmatic Developer**
+
 ```
 You are a Pragmatic Developer analyzing a React refactoring proposal.
 Your lens: maintainability, practicality, developer experience, cost-benefit.
@@ -151,11 +154,11 @@ Write your analysis. Focus on whether each change is WORTH THE EFFORT and improv
 
 3개 에이전트의 결과를 수집한 후 오케스트레이터가 종합:
 
-| 합의 상황 | 행동 |
-|-----------|------|
-| 3개 일치 (수용/수정/기각) | 높은 확신으로 해당 판단 채택 |
-| 2:1 (다수:소수) | 소수 의견의 근거를 검토 후 오케스트레이터가 최종 결정 |
-| 3개 상이 | `AskUserQuestion`으로 사용자에게 선택지와 근거를 제시하여 판단 요청 |
+| 합의 상황                 | 행동                                                                |
+| ------------------------- | ------------------------------------------------------------------- |
+| 3개 일치 (수용/수정/기각) | 높은 확신으로 해당 판단 채택                                        |
+| 2:1 (다수:소수)           | 소수 의견의 근거를 검토 후 오케스트레이터가 최종 결정               |
+| 3개 상이                  | `AskUserQuestion`으로 사용자에게 선택지와 근거를 제시하여 판단 요청 |
 
 ---
 
@@ -175,10 +178,12 @@ Write your analysis. Focus on whether each change is WORTH THE EFFORT and improv
 1. **분석 결과 요약**: 각 문제점에 대한 판단 (수용/수정/기각)
    - Multi-Perspective Mode인 경우: 각 관점의 Verdict와 최종 결정 근거 포함
 2. **리팩토링 계획서 작성**:
-  - 변경 대상 파일 목록
-  - 각 변경의 목적과 기대 효과
-  - 변경 순서 (의존성 고려)
-  - 예상 위험 요소
+
+- 변경 대상 파일 목록
+- 각 변경의 목적과 기대 효과
+- 변경 순서 (의존성 고려)
+- 예상 위험 요소
+
 3. **점진적 실행 계획**: 한 번에 큰 변경 대신 작은 단위로 분리
 
 ### Phase 4: 사용자 승인
@@ -221,16 +226,19 @@ Write your analysis. Focus on whether each change is WORTH THE EFFORT and improv
 ## React/TypeScript 특화 체크리스트
 
 훅 분리 시:
+
 - 분리 후에도 co-location이 유지되는가?
 - 커스텀 훅의 반환 타입이 명확한가?
 - 훅 간 의존성이 단방향인가?
 
 컴포넌트 분리 시:
+
 - Props drilling이 과도해지지 않는가?
 - 상태 끌어올리기가 필요해지지 않는가?
 - 컴포넌트 경계가 자연스러운가?
 
 폴더 구조 변경 시:
+
 - import 경로가 과도하게 길어지지 않는가?
 - 순환 의존성이 생기지 않는가?
 - 기존 구조와의 일관성은?

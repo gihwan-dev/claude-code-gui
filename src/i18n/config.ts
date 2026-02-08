@@ -18,7 +18,7 @@ i18n.use(initReactI18next).init({
 })
 
 // Update document lang on language change
-i18n.on('languageChanged', (lng) => {
+i18n.on('languageChanged', lng => {
   document.documentElement.lang = lng
 })
 

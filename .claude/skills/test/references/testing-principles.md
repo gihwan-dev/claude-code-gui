@@ -12,9 +12,9 @@
 
 좋은 테스트는 두 가지 특성을 동시에 만족한다:
 
-| 특성 | 의미 | 부재 시 문제 |
-|-----|------|------------|
-| **감도(sensitivity)** | 기능이 깨지면 실패한다 | 버그가 있어도 통과 (false positive) |
+| 특성                    | 의미                              | 부재 시 문제                                   |
+| ----------------------- | --------------------------------- | ---------------------------------------------- |
+| **감도(sensitivity)**   | 기능이 깨지면 실패한다            | 버그가 있어도 통과 (false positive)            |
 | **특이도(specificity)** | 구현을 리팩토링해도 깨지지 않는다 | 리팩토링할 때마다 테스트 수정 (false negative) |
 
 감도만 높은 테스트: 스냅샷 — 무관한 변경에도 깨진다.
@@ -42,12 +42,12 @@
 
 ## 4. 올바른 테스트 경계 선택
 
-| 대상 | 적합한 테스트 | 이유 |
-|------|-------------|------|
-| 순수 함수 / 유틸리티 | Unit (`*.spec.ts`, `*.test.ts`) | 빠르고 엣지케이스 커버 용이 |
-| 사용자 인터랙션 / 렌더링 결과 | Browser test (`*.browser.test.tsx`) | 실제 DOM에서 검증 필요 |
-| 기능 간 조합 | Browser test | 통합 환경에서만 의미 |
-| Custom Feature 상태 로직 | Unit (`*.spec.ts`) | Mock table로 빠르게 검증 |
+| 대상                          | 적합한 테스트                       | 이유                        |
+| ----------------------------- | ----------------------------------- | --------------------------- |
+| 순수 함수 / 유틸리티          | Unit (`*.spec.ts`, `*.test.ts`)     | 빠르고 엣지케이스 커버 용이 |
+| 사용자 인터랙션 / 렌더링 결과 | Browser test (`*.browser.test.tsx`) | 실제 DOM에서 검증 필요      |
+| 기능 간 조합                  | Browser test                        | 통합 환경에서만 의미        |
+| Custom Feature 상태 로직      | Unit (`*.spec.ts`)                  | Mock table로 빠르게 검증    |
 
 ## 5. Arrange-Act-Assert (AAA)
 
@@ -100,27 +100,28 @@ const options = {
   sortable: { use: true },
   selectable: { use: true, mode: 'multiple' },
   pagination: { use: true, pageSize: 10 },
-};
+}
 
 // ✅ 정렬 테스트에 필요한 것만
-const options = { sortable: { use: true } };
+const options = { sortable: { use: true } }
 ```
 
 ## 8. 단언(assertion) 품질
 
 ```typescript
 // ❌ 무의미한 단언: 실패 시 아무 정보 없음
-expect(result).toBeTruthy();
-expect(rows.length > 0).toBe(true);
-expect(element).toBeDefined();
+expect(result).toBeTruthy()
+expect(rows.length > 0).toBe(true)
+expect(element).toBeDefined()
 
 // ✅ 구체적 단언: 실패 시 기대값 vs 실제값이 명확
-expect(tester.renderedRowCount).toBe(5);
-expect(tester.getColumnValues(1)).toEqual(['김민수', '박지훈', '강수빈']);
-expect(header).toHaveAttribute('aria-sort', 'ascending');
+expect(tester.renderedRowCount).toBe(5)
+expect(tester.getColumnValues(1)).toEqual(['김민수', '박지훈', '강수빈'])
+expect(header).toHaveAttribute('aria-sort', 'ascending')
 ```
 
 **규칙:**
+
 - `toBeTruthy()` / `toBeDefined()` 대신 구체적 값을 비교한다.
 - `rows.length > 0`처럼 boolean 변환하지 말고 `rows.length`를 직접 비교한다.
 - 배열은 `toEqual`로 순서까지 검증한다.
@@ -139,15 +140,15 @@ Page Object Model 헬퍼(예: `TableTester`)가 있다면, 직접 셀렉터를 �
 
 ## 10. 안티패턴
 
-| 안티패턴 | 문제점 | 대안 |
-|---------|--------|------|
-| 프레임워크 동작 테스트 | React/TanStack이 이미 테스트함 | 비즈니스 로직만 테스트 |
-| 스냅샷 남용 | 무관한 변경에 깨짐 | 구체적 단언 사용 |
-| boolean 단언 | 실패 메시지 무의미 | 구체적 값 비교 |
-| 복붙 테스트 | 유지보수 지옥 | 헬퍼/페이지 오브젝트 추출 |
-| 과도한 목킹 | 실제 동작과 괴리 | 필요한 것만 최소한으로 |
-| 구현 결합 | 리팩토링 시 깨짐 | 행동 기반 테스트 |
-| 하나의 it에 여러 시나리오 | 실패 원인 모호 | 시나리오당 하나의 it |
-| 테스트 내 데이터 직접 생성 | 스토리와 불일치 | 스토리의 args 활용 |
-| `querySelector` 직접 사용 | 셀렉터 변경 시 전파 | 헬퍼 클래스 활용 |
-| for문/동적 테스트 생성 | 가독성 저하 | 명시적으로 각 케이스 작성 |
+| 안티패턴                   | 문제점                         | 대안                      |
+| -------------------------- | ------------------------------ | ------------------------- |
+| 프레임워크 동작 테스트     | React/TanStack이 이미 테스트함 | 비즈니스 로직만 테스트    |
+| 스냅샷 남용                | 무관한 변경에 깨짐             | 구체적 단언 사용          |
+| boolean 단언               | 실패 메시지 무의미             | 구체적 값 비교            |
+| 복붙 테스트                | 유지보수 지옥                  | 헬퍼/페이지 오브젝트 추출 |
+| 과도한 목킹                | 실제 동작과 괴리               | 필요한 것만 최소한으로    |
+| 구현 결합                  | 리팩토링 시 깨짐               | 행동 기반 테스트          |
+| 하나의 it에 여러 시나리오  | 실패 원인 모호                 | 시나리오당 하나의 it      |
+| 테스트 내 데이터 직접 생성 | 스토리와 불일치                | 스토리의 args 활용        |
+| `querySelector` 직접 사용  | 셀렉터 변경 시 전파            | 헬퍼 클래스 활용          |
+| for문/동적 테스트 생성     | 가독성 저하                    | 명시적으로 각 케이스 작성 |

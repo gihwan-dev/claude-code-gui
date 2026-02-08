@@ -27,7 +27,7 @@ You (Team Lead)
 ├── Phase 1-2: Analysis & Decomposition (you, detailed)
 ├── Phase 3: Parallel Paths (4-5 teammates, MINIMUM 2000 words each)
 │   ├── 🧠 first-principles
-│   ├── 🔧 pragmatist  
+│   ├── 🔧 pragmatist
 │   ├── 😈 adversarial
 │   ├── 💡 innovator
 │   └── ⚡ optimizer
@@ -50,6 +50,7 @@ python scripts/deep_think.py init "your question" -c extreme -w .deep-think
 ```
 
 Write `.deep-think/01-analysis/analysis.md` (aim for 500+ words):
+
 - Precise problem restatement with all nuances
 - Problem type and why it's complex
 - ALL constraints (explicit and implicit)
@@ -59,6 +60,7 @@ Write `.deep-think/01-analysis/analysis.md` (aim for 500+ words):
 - Known unknowns
 
 Write `.deep-think/02-decomposition/decomposition.md` (aim for 500+ words):
+
 - Sub-problems with dependency graph
 - Which sub-problems are hardest and why
 - Knowledge gaps that need research
@@ -133,7 +135,7 @@ Each teammate:
 CHALLENGE ROUND - Each teammate reads and critiques ONE other path:
 
 - first-principles: Read path-pragmatist.md and write a critique
-- pragmatist: Read path-adversarial.md and write a critique  
+- pragmatist: Read path-adversarial.md and write a critique
 - adversarial: Read path-optimizer.md and write a critique
 - optimizer: Read path-innovator.md and write a critique
 - innovator: Read path-first-principles.md and write a critique
@@ -193,12 +195,12 @@ Write .deep-think/05-synthesis/synthesis.md with:
 2. RESOLVED CONTRADICTIONS
    - Where paths disagreed, state the resolution and WHY
 
-3. ADDRESSED CHALLENGES  
+3. ADDRESSED CHALLENGES
    - How the synthesis handles each valid critique
 
 4. REMAINING UNCERTAINTY
    - What we STILL don't know (epistemic humility)
-   
+
 5. CONFIDENCE CALIBRATION
    - Overall confidence: [LOW / MEDIUM / HIGH / VERY HIGH]
    - If LOW or MEDIUM, explain what would increase it
@@ -244,6 +246,7 @@ Shutdown the deep-think team. Wait for all teammates to finish current work.
 ```
 
 Then generate report:
+
 ```bash
 python scripts/deep_think.py report -w .deep-think
 ```
@@ -251,10 +254,10 @@ python scripts/deep_think.py report -w .deep-think
 ## Time Budget Guidelines
 
 | Complexity | Teammates | Expected Wall Time | Min Words/Path |
-|------------|-----------|-------------------|----------------|
-| medium     | 3         | 10-15 min         | 1500           |
-| high       | 4         | 15-25 min         | 2000           |
-| extreme    | 5         | 25-40 min         | 2500           |
+| ---------- | --------- | ------------------ | -------------- |
+| medium     | 3         | 10-15 min          | 1500           |
+| high       | 4         | 15-25 min          | 2000           |
+| extreme    | 5         | 25-40 min          | 2500           |
 
 **Do NOT rush.** If teammates finish too fast, their output is probably shallow.
 

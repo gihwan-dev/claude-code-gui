@@ -49,7 +49,7 @@ function processData(
   options: ProcessOptions,
   context: ProcessContext,
   handlers: ProcessHandlers,
-  validators: ProcessValidators,
+  validators: ProcessValidators
 ) {
   // ...
 }
@@ -172,9 +172,7 @@ const adults = processArrayWithCondition(
 
 ```typescript
 // 바로 그 자리에서 명확하게
-const adultNames = users
-  .filter(user => user.age >= 18)
-  .map(user => user.name)
+const adultNames = users.filter(user => user.age >= 18).map(user => user.name)
 ```
 
 ## 자가 점검 체크리스트

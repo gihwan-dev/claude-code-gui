@@ -39,9 +39,9 @@ executeOperationWithFallback()
 processEntityBatch()
 
 // ✅ 좋은 이름: "~하는 함수"로 바로 설명 가능
-filterExpiredUsers()      // "만료된 사용자 거르는 함수"
-calculateShippingFee()    // "배송비 계산하는 함수"
-sendWelcomeEmail()        // "환영 이메일 보내는 함수"
+filterExpiredUsers() // "만료된 사용자 거르는 함수"
+calculateShippingFee() // "배송비 계산하는 함수"
+sendWelcomeEmail() // "환영 이메일 보내는 함수"
 ```
 
 ### 4. 성능 < 가독성
@@ -60,11 +60,11 @@ sendWelcomeEmail()        // "환영 이메일 보내는 함수"
 분기문: if, else if, case, while, for, catch, &&, ||, ? (삼항)
 ```
 
-| 점수 | 상태 | 조치 |
-|------|------|------|
-| 1-10 | 양호 | 유지 |
-| 11-20 | 주의 | 개선 권장 |
-| 21+ | 위험 | 반드시 개선 |
+| 점수  | 상태 | 조치        |
+| ----- | ---- | ----------- |
+| 1-10  | 양호 | 유지        |
+| 11-20 | 주의 | 개선 권장   |
+| 21+   | 위험 | 반드시 개선 |
 
 ### Step 2: 논리 흐름 파악
 
