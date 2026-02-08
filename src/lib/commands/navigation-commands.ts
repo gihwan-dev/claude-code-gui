@@ -1,4 +1,11 @@
-import { Sidebar, PanelRight, Settings } from 'lucide-react'
+import {
+  Sidebar,
+  PanelRight,
+  Settings,
+  Home,
+  Terminal,
+  FolderGit2,
+} from 'lucide-react'
 import { useUIStore } from '@/store/ui-store'
 import type { AppCommand } from './types'
 
@@ -79,5 +86,50 @@ export const navigationCommands: AppCommand[] = [
     execute: context => {
       context.openPreferences()
     },
+  },
+
+  {
+    id: 'view-welcome',
+    labelKey: 'commands.viewWelcome.label',
+    descriptionKey: 'commands.viewWelcome.description',
+    icon: Home,
+    group: 'navigation',
+    keywords: ['welcome', 'home', 'start'],
+
+    execute: () => {
+      useUIStore.getState().setActiveView('welcome')
+    },
+
+    isAvailable: () => useUIStore.getState().activeView !== 'welcome',
+  },
+
+  {
+    id: 'view-sessions',
+    labelKey: 'commands.viewSessions.label',
+    descriptionKey: 'commands.viewSessions.description',
+    icon: Terminal,
+    group: 'navigation',
+    keywords: ['sessions', 'chat', 'conversation'],
+
+    execute: () => {
+      useUIStore.getState().setActiveView('sessions')
+    },
+
+    isAvailable: () => useUIStore.getState().activeView !== 'sessions',
+  },
+
+  {
+    id: 'view-projects',
+    labelKey: 'commands.viewProjects.label',
+    descriptionKey: 'commands.viewProjects.description',
+    icon: FolderGit2,
+    group: 'navigation',
+    keywords: ['projects', 'folder', 'repository'],
+
+    execute: () => {
+      useUIStore.getState().setActiveView('projects')
+    },
+
+    isAvailable: () => useUIStore.getState().activeView !== 'projects',
   },
 ]
