@@ -142,7 +142,10 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
     return () => {
       const id = sessionIdRef.current
       if (id) {
-        commands.ptyKill(id)
+        sessionIdRef.current = null
+        commands.ptyKill(id).catch(() => {
+          // Ignore errors during cleanup — session may already be dead
+        })
       }
     }
   }, [])

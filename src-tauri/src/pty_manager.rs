@@ -202,8 +202,7 @@ impl PtyManager {
                         }
                         Err(e) => {
                             // On macOS/Linux, EIO (errno 5) is expected when the child exits
-                            if e.kind() == std::io::ErrorKind::Other || e.raw_os_error() == Some(5)
-                            {
+                            if e.raw_os_error() == Some(5) {
                                 if let Err(send_err) = channel.send(PtyEvent::Exit { code: None }) {
                                     log::error!("PTY channel.send failed for Exit: {send_err:?}");
                                 }

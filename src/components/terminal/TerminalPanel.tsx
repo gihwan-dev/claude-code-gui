@@ -19,6 +19,8 @@ export function TerminalPanel() {
 
   // Auto-spawn PTY when terminal is ready
   const spawnedRef = useRef(false)
+  const spawnRetryRef = useRef(0)
+  const MAX_SPAWN_RETRIES = 3
 
   const {
     isConnected,
@@ -70,20 +72,27 @@ export function TerminalPanel() {
   }, [cols, rows, isConnected, ptyResize])
 
   useEffect(() => {
-    if (isReady && !spawnedRef.current) {
+    if (
+      isReady &&
+      !spawnedRef.current &&
+      spawnRetryRef.current < MAX_SPAWN_RETRIES
+    ) {
       spawnedRef.current = true
+      const { cols: currentCols, rows: currentRows } =
+        useTerminalStore.getState()
       ptySpawn({
         command: null,
         args: [],
         cwd: null,
         env: {},
-        cols,
-        rows,
+        cols: currentCols,
+        rows: currentRows,
       }).catch(() => {
         spawnedRef.current = false
+        spawnRetryRef.current++
       })
     }
-  }, [isReady, cols, rows, ptySpawn])
+  }, [isReady, ptySpawn])
 
   // Re-fit terminal on connection
   useEffect(() => {
