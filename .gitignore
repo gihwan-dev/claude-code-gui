@@ -27,4 +27,4 @@ jscpd-report
 *.sw?
 
 # Claude Code
-.claude/
+.claude
