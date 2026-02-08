@@ -131,6 +131,51 @@ async updateQuickPaneShortcut(shortcut: string | null) : Promise<Result<null, st
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Spawns a new PTY session and begins streaming output via the channel.
+ * Returns the session ID.
+ */
+async ptySpawn(onEvent: TAURI_CHANNEL<PtyEvent>, options: SpawnOptions) : Promise<Result<string, PtyError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("pty_spawn", { onEvent, options }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Writes data to a PTY session's stdin.
+ */
+async ptyWrite(sessionId: string, data: number[]) : Promise<Result<null, PtyError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("pty_write", { sessionId, data }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Resizes a PTY session.
+ */
+async ptyResize(sessionId: string, cols: number, rows: number) : Promise<Result<null, PtyError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("pty_resize", { sessionId, cols, rows }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Kills a PTY session and cleans up resources.
+ */
+async ptyKill(sessionId: string) : Promise<Result<null, PtyError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("pty_kill", { sessionId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -161,6 +206,58 @@ quick_pane_shortcut: string | null;
 language: string | null }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
 /**
+ * Error types for PTY operations (typed for frontend matching)
+ */
+export type PtyError = 
+/**
+ * System-level error
+ */
+{ type: "SystemError"; message: string } | 
+/**
+ * Session not found
+ */
+{ type: "SessionNotFound"; session_id: string } | 
+/**
+ * Failed to spawn PTY process
+ */
+{ type: "SpawnError"; message: string } | 
+/**
+ * I/O error during read/write
+ */
+{ type: "IoError"; message: string } | 
+/**
+ * Failed to resize PTY
+ */
+{ type: "ResizeError"; message: string } | 
+/**
+ * Failed to acquire lock
+ */
+{ type: "LockError"; message: string } | 
+/**
+ * Validation error (invalid command, path, etc.)
+ */
+{ type: "ValidationError"; message: string } | 
+/**
+ * Resource limit reached
+ */
+{ type: "ResourceLimit"; message: string }
+/**
+ * Events streamed from PTY to frontend via Tauri Channel
+ */
+export type PtyEvent = 
+/**
+ * Raw output bytes from the PTY
+ */
+{ event: "Output"; data: { data: number[] } } | 
+/**
+ * PTY process exited
+ */
+{ event: "Exit"; data: { code: number | null } } | 
+/**
+ * Error occurred in the PTY
+ */
+{ event: "Error"; data: { message: string } }
+/**
  * Error types for recovery operations (typed for frontend matching)
  */
 export type RecoveryError = 
@@ -184,6 +281,35 @@ export type RecoveryError =
  * JSON serialization/deserialization error
  */
 { type: "ParseError"; message: string }
+/**
+ * Options for spawning a new PTY session
+ */
+export type SpawnOptions = { 
+/**
+ * Shell command to run (defaults to $SHELL or /bin/zsh)
+ */
+command: string | null; 
+/**
+ * Arguments to pass to the command
+ */
+args?: string[]; 
+/**
+ * Working directory (defaults to user's home)
+ */
+cwd: string | null; 
+/**
+ * Additional environment variables
+ */
+env?: Partial<{ [key in string]: string }>; 
+/**
+ * Terminal columns
+ */
+cols: number; 
+/**
+ * Terminal rows
+ */
+rows: number }
+export type TAURI_CHANNEL<TSend> = null
 
 /** tauri-specta globals **/
 

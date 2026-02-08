@@ -3,6 +3,7 @@
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use specta::Type;
+use std::collections::HashMap;
 use std::sync::LazyLock;
 
 /// Default shortcut for the quick pane
@@ -77,6 +78,91 @@ impl std::fmt::Display for RecoveryError {
             RecoveryError::ParseError { message } => write!(f, "Parse error: {message}"),
         }
     }
+}
+
+// ============================================================================
+// PTY Types
+// ============================================================================
+
+/// Error types for PTY operations (typed for frontend matching)
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "type")]
+pub enum PtyError {
+    /// System-level error
+    SystemError { message: String },
+    /// Session not found
+    SessionNotFound { session_id: String },
+    /// Failed to spawn PTY process
+    SpawnError { message: String },
+    /// I/O error during read/write
+    IoError { message: String },
+    /// Failed to resize PTY
+    ResizeError { message: String },
+    /// Failed to acquire lock
+    LockError { message: String },
+    /// Validation error (invalid command, path, etc.)
+    ValidationError { message: String },
+    /// Resource limit reached
+    ResourceLimit { message: String },
+}
+
+impl std::fmt::Display for PtyError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PtyError::SystemError { message } => write!(f, "System error: {message}"),
+            PtyError::SessionNotFound { session_id } => {
+                write!(f, "Session not found: {session_id}")
+            }
+            PtyError::SpawnError { message } => write!(f, "Spawn error: {message}"),
+            PtyError::IoError { message } => write!(f, "IO error: {message}"),
+            PtyError::ResizeError { message } => write!(f, "Resize error: {message}"),
+            PtyError::LockError { message } => write!(f, "Lock error: {message}"),
+            PtyError::ValidationError { message } => write!(f, "Validation error: {message}"),
+            PtyError::ResourceLimit { message } => write!(f, "Resource limit: {message}"),
+        }
+    }
+}
+
+/// Events streamed from PTY to frontend via Tauri Channel
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "event", content = "data")]
+pub enum PtyEvent {
+    /// Raw output bytes from the PTY
+    Output { data: Vec<u8> },
+    /// PTY process exited
+    Exit { code: Option<i32> },
+    /// Error occurred in the PTY
+    Error { message: String },
+}
+
+/// Options for spawning a new PTY session
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SpawnOptions {
+    /// Shell command to run (defaults to $SHELL or /bin/zsh)
+    pub command: Option<String>,
+    /// Arguments to pass to the command
+    #[serde(default)]
+    pub args: Vec<String>,
+    /// Working directory (defaults to user's home)
+    pub cwd: Option<String>,
+    /// Additional environment variables
+    #[serde(default)]
+    pub env: HashMap<String, String>,
+    /// Terminal columns
+    pub cols: u16,
+    /// Terminal rows
+    pub rows: u16,
+}
+
+/// Information about an active PTY session
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SessionInfo {
+    /// Unique session identifier
+    pub id: String,
+    /// Process ID of the shell
+    pub pid: Option<u32>,
+    /// Whether the session is still alive
+    pub is_alive: bool,
 }
 
 // ============================================================================

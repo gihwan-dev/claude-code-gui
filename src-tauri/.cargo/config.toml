@@ -1,0 +1,5 @@
+# Run tests sequentially to prevent PTY file descriptor exhaustion.
+# Multiple tests spawning interactive shells simultaneously can exceed
+# the system's PTY limit, causing sporadic "openpty" failures.
+[env]
+RUST_TEST_THREADS = "1"

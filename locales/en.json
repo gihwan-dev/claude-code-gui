@@ -71,6 +71,8 @@
   "statusBar.tokens": "Tokens",
   "statusBar.disconnected": "Disconnected",
   "statusBar.connected": "Connected",
+  "statusBar.connecting": "Connecting...",
+  "statusBar.error": "Connection Error",
 
   "commands.group.navigation": "Navigation",
   "commands.group.settings": "Settings",
@@ -137,5 +139,9 @@
 
   "terminal.title": "Terminal",
   "terminal.initializing": "Initializing...",
-  "terminal.dimensions": "{{cols}}\u00d7{{rows}}"
+  "terminal.dimensions": "{{cols}}\u00d7{{rows}}",
+  "terminal.connecting": "Connecting...",
+  "terminal.connected": "Connected",
+  "terminal.disconnected": "Disconnected",
+  "terminal.error": "Connection Error"
 }
