@@ -69,14 +69,22 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
 
     const encoder = new TextEncoder()
     const bytes = Array.from(encoder.encode(data))
-    commands.ptyWrite(id, bytes)
+    commands.ptyWrite(id, bytes).then(result => {
+      if (result.status === 'error') {
+        console.error('[pty] write failed:', result.error)
+      }
+    })
   }, [])
 
   const resize = useCallback((cols: number, rows: number) => {
     const id = sessionIdRef.current
     if (!id) return
 
-    commands.ptyResize(id, cols, rows)
+    commands.ptyResize(id, cols, rows).then(result => {
+      if (result.status === 'error') {
+        console.error('[pty] resize failed:', result.error)
+      }
+    })
   }, [])
 
   const kill = useCallback(async () => {
