@@ -279,10 +279,10 @@ impl PtyManager {
                     session_id: session_id.to_string(),
                 })?;
 
-        // Kill the child process
-        session.child.kill().map_err(|e| PtyError::IoError {
-            message: e.to_string(),
-        })?;
+        // Kill the child process (ignore errors if already exited)
+        if let Err(e) = session.child.kill() {
+            log::debug!("Child process already exited or kill failed: {e}");
+        }
 
         // Reap the zombie process
         let _ = session.child.wait();
@@ -310,6 +310,17 @@ impl PtyManager {
                 }
             })
             .collect()
+    }
+}
+
+impl Drop for PtyManager {
+    fn drop(&mut self) {
+        let session_ids: Vec<String> = self.sessions.keys().cloned().collect();
+        for id in &session_ids {
+            if let Err(e) = self.kill(id) {
+                log::warn!("Failed to kill session {id} during cleanup: {e}");
+            }
+        }
     }
 }
 
