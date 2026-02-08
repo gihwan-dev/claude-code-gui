@@ -63,29 +63,48 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
     }
   }, [])
 
-  const write = useCallback((data: string) => {
-    const id = sessionIdRef.current
-    if (!id) return
-
-    const encoder = new TextEncoder()
-    const bytes = Array.from(encoder.encode(data))
-    commands.ptyWrite(id, bytes).then(result => {
-      if (result.status === 'error') {
-        console.error('[pty] write failed:', result.error)
-      }
-    })
+  const handleSessionLost = useCallback(() => {
+    sessionIdRef.current = null
+    const { setSessionId, setConnectionStatus } = useTerminalStore.getState()
+    setSessionId(null)
+    setConnectionStatus('disconnected')
   }, [])
 
-  const resize = useCallback((cols: number, rows: number) => {
-    const id = sessionIdRef.current
-    if (!id) return
+  const write = useCallback(
+    (data: string) => {
+      const id = sessionIdRef.current
+      if (!id) return
 
-    commands.ptyResize(id, cols, rows).then(result => {
-      if (result.status === 'error') {
-        console.error('[pty] resize failed:', result.error)
-      }
-    })
-  }, [])
+      const encoder = new TextEncoder()
+      const bytes = Array.from(encoder.encode(data))
+      commands.ptyWrite(id, bytes).then(result => {
+        if (result.status === 'error') {
+          if (result.error.type === 'SessionNotFound') {
+            handleSessionLost()
+          }
+          console.error('[pty] write failed:', result.error)
+        }
+      })
+    },
+    [handleSessionLost]
+  )
+
+  const resize = useCallback(
+    (cols: number, rows: number) => {
+      const id = sessionIdRef.current
+      if (!id) return
+
+      commands.ptyResize(id, cols, rows).then(result => {
+        if (result.status === 'error') {
+          if (result.error.type === 'SessionNotFound') {
+            handleSessionLost()
+          }
+          console.error('[pty] resize failed:', result.error)
+        }
+      })
+    },
+    [handleSessionLost]
+  )
 
   const kill = useCallback(async () => {
     const id = sessionIdRef.current
@@ -95,11 +114,9 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
     if (result.status === 'error') {
       console.error('[pty] kill failed:', result.error)
     }
-    sessionIdRef.current = null
-    const { setSessionId, setConnectionStatus } = useTerminalStore.getState()
-    setSessionId(null)
-    setConnectionStatus('disconnected')
-  }, [])
+    // kill 실패 여부와 무관하게 로컬 상태 정리 (이미 죽은 세션 kill 시도 등)
+    handleSessionLost()
+  }, [handleSessionLost])
 
   // Cleanup on unmount
   useEffect(() => {

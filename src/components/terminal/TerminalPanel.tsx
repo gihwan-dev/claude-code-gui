@@ -13,6 +13,10 @@ export function TerminalPanel() {
   const connectionStatus = useTerminalStore(state => state.connectionStatus)
 
   const writeRef = useRef<((data: string) => void) | null>(null)
+  const decoderRef = useRef(new TextDecoder('utf-8', { fatal: false }))
+
+  // Auto-spawn PTY when terminal is ready
+  const spawnedRef = useRef(false)
 
   const {
     isConnected,
@@ -21,8 +25,10 @@ export function TerminalPanel() {
     resize: ptyResize,
   } = usePty({
     onData: data => {
-      const decoder = new TextDecoder()
-      writeRef.current?.(decoder.decode(data))
+      writeRef.current?.(decoderRef.current.decode(data, { stream: true }))
+    },
+    onExit: () => {
+      spawnedRef.current = false
     },
   })
 
@@ -43,8 +49,6 @@ export function TerminalPanel() {
     }
   }, [cols, rows, isConnected, ptyResize])
 
-  // Auto-spawn PTY when terminal is ready
-  const spawnedRef = useRef(false)
   useEffect(() => {
     if (isReady && !spawnedRef.current) {
       spawnedRef.current = true
@@ -52,6 +56,7 @@ export function TerminalPanel() {
         command: null,
         args: [],
         cwd: null,
+        env: {},
         cols,
         rows,
       })
