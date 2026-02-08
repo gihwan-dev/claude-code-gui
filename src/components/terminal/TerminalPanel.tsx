@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import '@xterm/xterm/css/xterm.css'
+import { useLineBuffer } from '@/hooks/use-line-buffer'
 import { useTerminal } from '@/hooks/use-terminal'
 import { useTerminalStore } from '@/store/terminal-store'
 
@@ -10,36 +11,15 @@ export function TerminalPanel() {
   const cols = useTerminalStore(state => state.cols)
   const rows = useTerminalStore(state => state.rows)
 
-  const lineBufferRef = useRef('')
-  const writeRef = useRef<((data: string) => void) | null>(null)
-
-  const handleData = useCallback((data: string) => {
-    const writeFn = writeRef.current
-    if (!writeFn) return
-
-    for (const ch of data) {
-      if (ch === '\r') {
-        writeFn(`\r\n${lineBufferRef.current}\r\n`)
-        lineBufferRef.current = ''
-      } else if (ch === '\x7f' || ch === '\b') {
-        if (lineBufferRef.current.length > 0) {
-          lineBufferRef.current = lineBufferRef.current.slice(0, -1)
-          writeFn('\b \b')
-        }
-      } else if (ch >= ' ') {
-        lineBufferRef.current += ch
-        writeFn(ch)
-      }
-    }
-  }, [])
+  const { handleData, setWrite } = useLineBuffer()
 
   const { terminalRef, write } = useTerminal({
     onData: handleData,
   })
 
   useEffect(() => {
-    writeRef.current = write
-  }, [write])
+    setWrite(write)
+  }, [write, setWrite])
 
   return (
     <div className="flex h-full flex-col">

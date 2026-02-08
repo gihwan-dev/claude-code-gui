@@ -25,14 +25,11 @@ vi.mock('@xterm/addon-fit', () => {
   return { FitAddon: MockFitAddon }
 })
 
-vi.mock('@xterm/addon-webgl', () => {
-  class MockWebglAddon {
-    constructor() {
-      throw new Error('WebGL not available')
-    }
-  }
-  return { WebglAddon: MockWebglAddon }
-})
+vi.mock('@xterm/addon-webgl', () => ({
+  WebglAddon: vi.fn().mockImplementation(() => {
+    throw new Error('WebGL not available')
+  }),
+}))
 
 vi.mock('@/hooks/use-terminal-theme', () => ({
   useTerminalTheme: vi.fn().mockReturnValue({
@@ -61,7 +58,6 @@ describe('TerminalPanel', () => {
       isWebGLActive: false,
       cols: 80,
       rows: 24,
-      connectionStatus: 'disconnected',
     })
   })
 

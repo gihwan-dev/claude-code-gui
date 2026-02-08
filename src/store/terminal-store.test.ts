@@ -8,7 +8,6 @@ describe('terminal-store', () => {
       isWebGLActive: false,
       cols: 80,
       rows: 24,
-      connectionStatus: 'disconnected',
     })
   })
 
@@ -18,7 +17,6 @@ describe('terminal-store', () => {
     expect(state.isWebGLActive).toBe(false)
     expect(state.cols).toBe(80)
     expect(state.rows).toBe(24)
-    expect(state.connectionStatus).toBe('disconnected')
   })
 
   it('should set ready state', () => {
@@ -42,16 +40,5 @@ describe('terminal-store', () => {
     const state = useTerminalStore.getState()
     expect(state.cols).toBe(120)
     expect(state.rows).toBe(40)
-  })
-
-  it('should set connection status', () => {
-    useTerminalStore.getState().setConnectionStatus('connecting')
-    expect(useTerminalStore.getState().connectionStatus).toBe('connecting')
-
-    useTerminalStore.getState().setConnectionStatus('connected')
-    expect(useTerminalStore.getState().connectionStatus).toBe('connected')
-
-    useTerminalStore.getState().setConnectionStatus('disconnected')
-    expect(useTerminalStore.getState().connectionStatus).toBe('disconnected')
   })
 })

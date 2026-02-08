@@ -59,21 +59,20 @@ export function useTerminal(
   const terminalInstanceRef = useRef<Terminal | null>(null)
   const fitAddonRef = useRef<FitAddon | null>(null)
   const onDataRef = useRef(onData)
-  const initialThemeRef = useRef<ITheme | null>(null)
 
   const terminalTheme = useTerminalTheme()
+  const themeRef = useRef(terminalTheme)
 
   const writeRef = useRef<(data: string) => void>(noop)
   const fitRef = useRef<() => void>(noop)
 
-  // Keep onDataRef in sync
+  // Keep refs in sync
   useEffect(() => {
     onDataRef.current = onData
   }, [onData])
 
-  // Capture the latest theme for initialization
   useEffect(() => {
-    initialThemeRef.current = terminalTheme
+    themeRef.current = terminalTheme
   }, [terminalTheme])
 
   useEffect(() => {
@@ -83,12 +82,7 @@ export function useTerminal(
     const { setReady, setWebGLActive, setDimensions } =
       useTerminalStore.getState()
 
-    const terminal = createTerminal(
-      initialThemeRef.current ?? {
-        background: '#1a1a1a',
-        foreground: '#e8eaed',
-      }
-    )
+    const terminal = createTerminal(themeRef.current)
 
     const fitAddon = new FitAddon()
     terminal.loadAddon(fitAddon)
