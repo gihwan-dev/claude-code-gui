@@ -2,9 +2,17 @@
 //!
 //! Manages pseudo-terminal sessions for the terminal UI.
 //! Each session runs a shell process and streams output via Tauri Channel API.
+//!
+//! # Security
+//!
+//! - Shell commands are validated against a whitelist of known shells
+//! - Working directories are canonicalized to prevent path traversal
+//! - Dangerous environment variables (LD_PRELOAD, etc.) are blocked
+//! - Maximum session limit prevents resource exhaustion
 
 use std::collections::HashMap;
 use std::io::{Read, Write};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::thread::JoinHandle;
 
 use portable_pty::{native_pty_system, Child, CommandBuilder, MasterPty, PtySize};
@@ -15,6 +23,35 @@ use crate::types::{PtyError, PtyEvent, SessionInfo, SpawnOptions};
 
 /// Size of the read buffer for PTY output (4KB)
 const READ_BUFFER_SIZE: usize = 4096;
+
+/// Maximum number of concurrent PTY sessions
+const MAX_SESSIONS: usize = 10;
+
+/// Allowed shell commands (absolute paths only)
+const ALLOWED_SHELLS: &[&str] = &[
+    "/bin/bash",
+    "/bin/zsh",
+    "/bin/sh",
+    "/bin/fish",
+    "/usr/bin/bash",
+    "/usr/bin/zsh",
+    "/usr/bin/fish",
+    "/usr/local/bin/bash",
+    "/usr/local/bin/zsh",
+    "/usr/local/bin/fish",
+    "/opt/homebrew/bin/bash",
+    "/opt/homebrew/bin/zsh",
+    "/opt/homebrew/bin/fish",
+];
+
+/// Environment variables that must not be overridden by the frontend
+const BLOCKED_ENV_VARS: &[&str] = &[
+    "LD_PRELOAD",
+    "LD_LIBRARY_PATH",
+    "DYLD_INSERT_LIBRARIES",
+    "DYLD_LIBRARY_PATH",
+    "DYLD_FALLBACK_LIBRARY_PATH",
+];
 
 /// An active PTY session with its associated resources.
 pub struct PtySession {
@@ -49,6 +86,13 @@ impl PtyManager {
         options: SpawnOptions,
         on_event: Channel<PtyEvent>,
     ) -> Result<String, PtyError> {
+        // Enforce session limit
+        if self.sessions.len() >= MAX_SESSIONS {
+            return Err(PtyError::ResourceLimit {
+                message: format!("Maximum number of sessions ({MAX_SESSIONS}) reached"),
+            });
+        }
+
         let session_id = Uuid::new_v4().to_string();
 
         let pty_system = native_pty_system();
@@ -64,19 +108,22 @@ impl PtyManager {
                 message: e.to_string(),
             })?;
 
-        // Determine shell command
+        // Determine and validate shell command
         let shell = options
             .command
             .unwrap_or_else(|| std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".to_string()));
+
+        validate_shell(&shell)?;
 
         let mut cmd = CommandBuilder::new(&shell);
         for arg in &options.args {
             cmd.arg(arg);
         }
 
-        // Set working directory
+        // Set working directory (validated)
         if let Some(ref cwd) = options.cwd {
-            cmd.cwd(cwd);
+            let validated = validate_cwd(cwd)?;
+            cmd.cwd(validated);
         } else if let Some(home) = dirs_home() {
             cmd.cwd(home);
         }
@@ -84,8 +131,12 @@ impl PtyManager {
         // Set TERM environment variable
         cmd.env("TERM", "xterm-256color");
 
-        // Set additional environment variables
+        // Set additional environment variables (filtered for safety)
         for (key, value) in &options.env {
+            if is_blocked_env_var(key) {
+                log::warn!("Blocked dangerous environment variable: {key}");
+                continue;
+            }
             cmd.env(key, value);
         }
 
@@ -118,34 +169,42 @@ impl PtyManager {
                 message: e.to_string(),
             })?;
 
-        // Spawn reader thread
+        // Spawn reader thread (with panic safety)
         let event_channel = on_event.clone();
         let reader_thread = std::thread::spawn(move || {
-            let mut buf = [0u8; READ_BUFFER_SIZE];
-            loop {
-                match reader.read(&mut buf) {
-                    Ok(0) => {
-                        // EOF — child process has exited
-                        let _ = event_channel.send(PtyEvent::Exit { code: None });
-                        break;
-                    }
-                    Ok(n) => {
-                        let _ = event_channel.send(PtyEvent::Output {
-                            data: buf[..n].to_vec(),
-                        });
-                    }
-                    Err(e) => {
-                        // On macOS/Linux, EIO (errno 5) is expected when the child exits
-                        if e.kind() == std::io::ErrorKind::Other || e.raw_os_error() == Some(5) {
-                            let _ = event_channel.send(PtyEvent::Exit { code: None });
-                        } else {
-                            let _ = event_channel.send(PtyEvent::Error {
-                                message: e.to_string(),
+            let channel = event_channel;
+            let result = catch_unwind(AssertUnwindSafe(|| {
+                let mut buf = [0u8; READ_BUFFER_SIZE];
+                loop {
+                    match reader.read(&mut buf) {
+                        Ok(0) => {
+                            // EOF — child process has exited
+                            let _ = channel.send(PtyEvent::Exit { code: None });
+                            break;
+                        }
+                        Ok(n) => {
+                            let _ = channel.send(PtyEvent::Output {
+                                data: buf[..n].to_vec(),
                             });
                         }
-                        break;
+                        Err(e) => {
+                            // On macOS/Linux, EIO (errno 5) is expected when the child exits
+                            if e.kind() == std::io::ErrorKind::Other || e.raw_os_error() == Some(5)
+                            {
+                                let _ = channel.send(PtyEvent::Exit { code: None });
+                            } else {
+                                let _ = channel.send(PtyEvent::Error {
+                                    message: e.to_string(),
+                                });
+                            }
+                            break;
+                        }
                     }
                 }
+            }));
+
+            if let Err(e) = result {
+                log::error!("Reader thread panicked: {e:?}");
             }
         });
 
@@ -225,6 +284,9 @@ impl PtyManager {
             message: e.to_string(),
         })?;
 
+        // Reap the zombie process
+        let _ = session.child.wait();
+
         log::info!("PTY session killed: {session_id}");
         Ok(())
     }
@@ -256,6 +318,39 @@ fn dirs_home() -> Option<String> {
     std::env::var("HOME").ok()
 }
 
+/// Validates that the shell command is in the allowed list.
+fn validate_shell(shell: &str) -> Result<(), PtyError> {
+    if ALLOWED_SHELLS.contains(&shell) {
+        Ok(())
+    } else {
+        Err(PtyError::ValidationError {
+            message: format!("Shell not allowed: {shell}"),
+        })
+    }
+}
+
+/// Validates and canonicalizes the working directory path.
+fn validate_cwd(path: &str) -> Result<std::path::PathBuf, PtyError> {
+    let path = std::path::Path::new(path);
+
+    let canonical = path.canonicalize().map_err(|e| PtyError::ValidationError {
+        message: format!("Invalid working directory: {e}"),
+    })?;
+
+    if !canonical.is_dir() {
+        return Err(PtyError::ValidationError {
+            message: "Working directory must be a directory".to_string(),
+        });
+    }
+
+    Ok(canonical)
+}
+
+/// Returns true if the environment variable is blocked for security.
+fn is_blocked_env_var(key: &str) -> bool {
+    BLOCKED_ENV_VARS.contains(&key)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -280,8 +375,8 @@ mod tests {
 
     fn default_spawn_options() -> SpawnOptions {
         SpawnOptions {
-            command: Some("/bin/echo".to_string()),
-            args: vec!["hello from pty".to_string()],
+            command: Some("/bin/sh".to_string()),
+            args: vec!["-c".to_string(), "echo hello from pty".to_string()],
             cwd: None,
             env: HashMap::new(),
             cols: 80,
@@ -289,9 +384,10 @@ mod tests {
         }
     }
 
-    fn cat_spawn_options() -> SpawnOptions {
+    /// Spawns an interactive shell for tests that need a long-running process.
+    fn interactive_spawn_options() -> SpawnOptions {
         SpawnOptions {
-            command: Some("/bin/cat".to_string()),
+            command: Some("/bin/sh".to_string()),
             args: vec![],
             cwd: None,
             env: HashMap::new(),
@@ -338,7 +434,7 @@ mod tests {
         let mut manager = PtyManager::new();
         let (channel, _rx) = test_channel();
 
-        let session_id = manager.spawn(cat_spawn_options(), channel).unwrap();
+        let session_id = manager.spawn(interactive_spawn_options(), channel).unwrap();
         assert_eq!(manager.sessions.len(), 1);
 
         manager.kill(&session_id).unwrap();
@@ -362,7 +458,7 @@ mod tests {
         let mut manager = PtyManager::new();
         let (channel, _rx) = test_channel();
 
-        let session_id = manager.spawn(cat_spawn_options(), channel).unwrap();
+        let session_id = manager.spawn(interactive_spawn_options(), channel).unwrap();
 
         let result = manager.write(&session_id, b"test input\n");
         assert!(result.is_ok());
@@ -375,7 +471,7 @@ mod tests {
         let mut manager = PtyManager::new();
         let (channel, _rx) = test_channel();
 
-        let session_id = manager.spawn(cat_spawn_options(), channel).unwrap();
+        let session_id = manager.spawn(interactive_spawn_options(), channel).unwrap();
 
         let result = manager.resize(&session_id, 120, 40);
         assert!(result.is_ok());
@@ -389,8 +485,12 @@ mod tests {
         let (channel1, _rx1) = test_channel();
         let (channel2, _rx2) = test_channel();
 
-        let id1 = manager.spawn(cat_spawn_options(), channel1).unwrap();
-        let _id2 = manager.spawn(cat_spawn_options(), channel2).unwrap();
+        let id1 = manager
+            .spawn(interactive_spawn_options(), channel1)
+            .unwrap();
+        let _id2 = manager
+            .spawn(interactive_spawn_options(), channel2)
+            .unwrap();
 
         let sessions = manager.list();
         assert_eq!(sessions.len(), 2);
@@ -398,5 +498,103 @@ mod tests {
         manager.kill(&id1).unwrap();
         let sessions = manager.list();
         assert_eq!(sessions.len(), 1);
+    }
+
+    #[test]
+    fn test_reject_disallowed_shell() {
+        let mut manager = PtyManager::new();
+        let (channel, _rx) = test_channel();
+
+        let options = SpawnOptions {
+            command: Some("/usr/bin/python3".to_string()),
+            args: vec![],
+            cwd: None,
+            env: HashMap::new(),
+            cols: 80,
+            rows: 24,
+        };
+
+        let result = manager.spawn(options, channel);
+        assert!(result.is_err());
+        if let Err(PtyError::ValidationError { message }) = result {
+            assert!(message.contains("not allowed"));
+        } else {
+            panic!("Expected ValidationError");
+        }
+    }
+
+    #[test]
+    fn test_reject_invalid_cwd() {
+        let mut manager = PtyManager::new();
+        let (channel, _rx) = test_channel();
+
+        let options = SpawnOptions {
+            command: Some("/bin/sh".to_string()),
+            args: vec![],
+            cwd: Some("/nonexistent/path/that/does/not/exist".to_string()),
+            env: HashMap::new(),
+            cols: 80,
+            rows: 24,
+        };
+
+        let result = manager.spawn(options, channel);
+        assert!(result.is_err());
+        if let Err(PtyError::ValidationError { message }) = result {
+            assert!(message.contains("Invalid working directory"));
+        } else {
+            panic!("Expected ValidationError");
+        }
+    }
+
+    #[test]
+    fn test_blocked_env_vars_are_filtered() {
+        let mut manager = PtyManager::new();
+        let (channel, _rx) = test_channel();
+
+        let mut env = HashMap::new();
+        env.insert("LD_PRELOAD".to_string(), "/tmp/evil.so".to_string());
+        env.insert("MY_SAFE_VAR".to_string(), "safe_value".to_string());
+
+        let options = SpawnOptions {
+            command: Some("/bin/sh".to_string()),
+            args: vec![],
+            cwd: None,
+            env,
+            cols: 80,
+            rows: 24,
+        };
+
+        // Should succeed — blocked vars are filtered, not rejected
+        let result = manager.spawn(options, channel);
+        assert!(result.is_ok());
+        manager.kill(&result.unwrap()).unwrap();
+    }
+
+    #[test]
+    fn test_session_limit() {
+        let mut manager = PtyManager::new();
+
+        // Spawn MAX_SESSIONS sessions
+        let mut ids = Vec::new();
+        for _ in 0..MAX_SESSIONS {
+            let (channel, _rx) = test_channel();
+            let id = manager.spawn(interactive_spawn_options(), channel).unwrap();
+            ids.push(id);
+        }
+
+        // Next spawn should fail
+        let (channel, _rx) = test_channel();
+        let result = manager.spawn(interactive_spawn_options(), channel);
+        assert!(result.is_err());
+        if let Err(PtyError::ResourceLimit { .. }) = result {
+            // Expected
+        } else {
+            panic!("Expected ResourceLimit error");
+        }
+
+        // Cleanup
+        for id in &ids {
+            manager.kill(id).unwrap();
+        }
     }
 }

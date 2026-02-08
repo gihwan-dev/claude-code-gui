@@ -29,6 +29,8 @@ export function TerminalPanel() {
     },
     onExit: () => {
       spawnedRef.current = false
+      // Reset decoder state for next session
+      decoderRef.current = new TextDecoder('utf-8', { fatal: false })
     },
   })
 
@@ -59,6 +61,8 @@ export function TerminalPanel() {
         env: {},
         cols,
         rows,
+      }).catch(() => {
+        spawnedRef.current = false
       })
     }
   }, [isReady, cols, rows, ptySpawn])

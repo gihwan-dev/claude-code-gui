@@ -100,6 +100,10 @@ pub enum PtyError {
     ResizeError { message: String },
     /// Failed to acquire lock
     LockError { message: String },
+    /// Validation error (invalid command, path, etc.)
+    ValidationError { message: String },
+    /// Resource limit reached
+    ResourceLimit { message: String },
 }
 
 impl std::fmt::Display for PtyError {
@@ -113,6 +117,8 @@ impl std::fmt::Display for PtyError {
             PtyError::IoError { message } => write!(f, "IO error: {message}"),
             PtyError::ResizeError { message } => write!(f, "Resize error: {message}"),
             PtyError::LockError { message } => write!(f, "Lock error: {message}"),
+            PtyError::ValidationError { message } => write!(f, "Validation error: {message}"),
+            PtyError::ResourceLimit { message } => write!(f, "Resource limit: {message}"),
         }
     }
 }

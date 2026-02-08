@@ -3,12 +3,18 @@
 //! Provides Tauri commands to spawn, write to, resize, and kill PTY sessions.
 //! Output is streamed to the frontend via Tauri Channel API.
 
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard, PoisonError};
 use tauri::ipc::Channel;
 use tauri::State;
 
 use crate::pty_manager::PtyManager;
 use crate::types::{PtyError, PtyEvent, SpawnOptions};
+
+/// Recovers from a poisoned mutex by logging a warning and returning the inner value.
+fn recover_lock(err: PoisonError<MutexGuard<'_, PtyManager>>) -> MutexGuard<'_, PtyManager> {
+    log::warn!("PtyManager mutex was poisoned, recovering: {err}");
+    err.into_inner()
+}
 
 /// Spawns a new PTY session and begins streaming output via the channel.
 /// Returns the session ID.
@@ -19,9 +25,7 @@ pub fn pty_spawn(
     on_event: Channel<PtyEvent>,
     options: SpawnOptions,
 ) -> Result<String, PtyError> {
-    let mut manager = state.lock().map_err(|e| PtyError::LockError {
-        message: e.to_string(),
-    })?;
+    let mut manager = state.lock().unwrap_or_else(recover_lock);
     manager.spawn(options, on_event)
 }
 
@@ -33,9 +37,7 @@ pub fn pty_write(
     session_id: String,
     data: Vec<u8>,
 ) -> Result<(), PtyError> {
-    let mut manager = state.lock().map_err(|e| PtyError::LockError {
-        message: e.to_string(),
-    })?;
+    let mut manager = state.lock().unwrap_or_else(recover_lock);
     manager.write(&session_id, &data)
 }
 
@@ -48,9 +50,7 @@ pub fn pty_resize(
     cols: u16,
     rows: u16,
 ) -> Result<(), PtyError> {
-    let manager = state.lock().map_err(|e| PtyError::LockError {
-        message: e.to_string(),
-    })?;
+    let manager = state.lock().unwrap_or_else(recover_lock);
     manager.resize(&session_id, cols, rows)
 }
 
@@ -58,8 +58,6 @@ pub fn pty_resize(
 #[tauri::command]
 #[specta::specta]
 pub fn pty_kill(state: State<'_, Mutex<PtyManager>>, session_id: String) -> Result<(), PtyError> {
-    let mut manager = state.lock().map_err(|e| PtyError::LockError {
-        message: e.to_string(),
-    })?;
+    let mut manager = state.lock().unwrap_or_else(recover_lock);
     manager.kill(&session_id)
 }

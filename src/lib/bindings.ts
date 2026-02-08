@@ -232,7 +232,15 @@ export type PtyError =
 /**
  * Failed to acquire lock
  */
-{ type: "LockError"; message: string }
+{ type: "LockError"; message: string } | 
+/**
+ * Validation error (invalid command, path, etc.)
+ */
+{ type: "ValidationError"; message: string } | 
+/**
+ * Resource limit reached
+ */
+{ type: "ResourceLimit"; message: string }
 /**
  * Events streamed from PTY to frontend via Tauri Channel
  */
