@@ -4,7 +4,6 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
     use crate::commands::{notifications, preferences, quick_pane, recovery};
 
     Builder::<tauri::Wry>::new().commands(collect_commands![
-        preferences::greet,
         preferences::load_preferences,
         preferences::save_preferences,
         notifications::send_native_notification,
