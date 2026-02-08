@@ -3,6 +3,10 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": true
   },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "includeCoAuthoredBy": false,
   "hooks": {
     "PreToolUse": [
       {
