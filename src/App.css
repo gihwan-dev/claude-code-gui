@@ -54,4 +54,25 @@
     -webkit-app-region: drag;
     app-region: drag;
   }
+
+  /* xterm terminal overrides */
+  .terminal-container .xterm {
+    height: 100%;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+  }
+
+  .terminal-container .xterm * {
+    cursor: text !important;
+  }
+
+  .terminal-container .xterm-viewport {
+    scrollbar-width: thin;
+  }
+
+  .terminal-container {
+    padding: 4px;
+  }
 }
