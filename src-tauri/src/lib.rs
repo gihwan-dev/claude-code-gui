@@ -6,6 +6,7 @@
 
 mod bindings;
 mod commands;
+mod pty_manager;
 mod types;
 mod utils;
 
@@ -87,6 +88,7 @@ pub fn run() {
     }
 
     app_builder
+        .manage(std::sync::Mutex::new(pty_manager::PtyManager::new()))
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_persisted_scope::init())
         .plugin(tauri_plugin_dialog::init())

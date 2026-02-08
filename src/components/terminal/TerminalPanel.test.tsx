@@ -11,12 +11,27 @@ vi.mock('react-i18next', () => ({
       const map: Record<string, string> = {
         'terminal.title': 'Terminal',
         'terminal.initializing': 'Initializing...',
+        'terminal.connecting': 'Connecting...',
+        'terminal.connected': 'Connected',
+        'terminal.disconnected': 'Disconnected',
+        'terminal.error': 'Connection Error',
       }
       if (key === 'terminal.dimensions' && params) {
         return `${params.cols}\u00d7${params.rows}`
       }
       return map[key] ?? key
     },
+  }),
+}))
+
+vi.mock('@/hooks/use-pty', () => ({
+  usePty: () => ({
+    sessionId: null,
+    isConnected: false,
+    spawn: vi.fn(),
+    write: vi.fn(),
+    resize: vi.fn(),
+    kill: vi.fn(),
   }),
 }))
 
@@ -28,6 +43,8 @@ describe('TerminalPanel', () => {
       isWebGLActive: false,
       cols: 80,
       rows: 24,
+      sessionId: null,
+      connectionStatus: 'disconnected',
     })
   })
 
@@ -37,11 +54,11 @@ describe('TerminalPanel', () => {
     expect(screen.getByText('Terminal')).toBeInTheDocument()
   })
 
-  it('should show dimensions after terminal initializes', async () => {
+  it('should show disconnected status when not connected', async () => {
+    useTerminalStore.setState({ isReady: true })
     const { TerminalPanel } = await import('./TerminalPanel')
     render(<TerminalPanel />)
-    // After useTerminal effect runs, store is set to ready with 80×24
-    expect(screen.getByText('80\u00d724')).toBeInTheDocument()
+    expect(screen.getByText('Disconnected')).toBeInTheDocument()
   })
 
   it('should render the terminal container', async () => {

@@ -5,5 +5,6 @@
 
 pub mod notifications;
 pub mod preferences;
+pub mod pty;
 pub mod quick_pane;
 pub mod recovery;

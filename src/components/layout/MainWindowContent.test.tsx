@@ -1,7 +1,18 @@
 import { render, screen } from '@/test/test-utils'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useUIStore } from '@/store/ui-store'
 import { MainWindowContent } from './MainWindowContent'
+
+vi.mock('@/hooks/use-pty', () => ({
+  usePty: () => ({
+    sessionId: null,
+    isConnected: false,
+    spawn: vi.fn(),
+    write: vi.fn(),
+    resize: vi.fn(),
+    kill: vi.fn(),
+  }),
+}))
 
 describe('MainWindowContent', () => {
   beforeEach(() => {

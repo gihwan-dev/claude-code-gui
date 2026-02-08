@@ -8,6 +8,8 @@ describe('terminal-store', () => {
       isWebGLActive: false,
       cols: 80,
       rows: 24,
+      sessionId: null,
+      connectionStatus: 'disconnected',
     })
   })
 
@@ -17,6 +19,8 @@ describe('terminal-store', () => {
     expect(state.isWebGLActive).toBe(false)
     expect(state.cols).toBe(80)
     expect(state.rows).toBe(24)
+    expect(state.sessionId).toBeNull()
+    expect(state.connectionStatus).toBe('disconnected')
   })
 
   it('should set ready state', () => {

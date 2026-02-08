@@ -34,6 +34,8 @@ tauri-plugin-os = "2"
 tauri-plugin-global-shortcut = "2"
 log = "0.4"
 regex = "1"
+portable-pty = "0.9"
+uuid = { version = "1", features = ["v4"] }
 
 # Type-safe Tauri command bindings
 specta = { version = "=2.0.0-rc.22", features = ["derive", "serde_json"] }
