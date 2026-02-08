@@ -96,14 +96,17 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
       if (!id) return
 
       const bytes = Array.from(encoder.encode(data))
-      commands.ptyWrite(id, bytes).then(result => {
-        if (result.status === 'error') {
-          if (result.error.type === 'SessionNotFound') {
-            handleSessionLost()
+      commands
+        .ptyWrite(id, bytes)
+        .then(result => {
+          if (result.status === 'error') {
+            if (result.error.type === 'SessionNotFound') {
+              handleSessionLost()
+            }
+            logError('[pty] write failed', { error: result.error })
           }
-          logError('[pty] write failed', { error: result.error })
-        }
-      })
+        })
+        .catch(err => logError('[pty] write invoke failed', err))
     },
     [handleSessionLost]
   )
@@ -113,14 +116,17 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
       const id = sessionIdRef.current
       if (!id) return
 
-      commands.ptyResize(id, cols, rows).then(result => {
-        if (result.status === 'error') {
-          if (result.error.type === 'SessionNotFound') {
-            handleSessionLost()
+      commands
+        .ptyResize(id, cols, rows)
+        .then(result => {
+          if (result.status === 'error') {
+            if (result.error.type === 'SessionNotFound') {
+              handleSessionLost()
+            }
+            logError('[pty] resize failed', { error: result.error })
           }
-          logError('[pty] resize failed', { error: result.error })
-        }
-      })
+        })
+        .catch(err => logError('[pty] resize invoke failed', err))
     },
     [handleSessionLost]
   )

@@ -24,14 +24,11 @@ vi.mock('react-i18next', () => ({
   }),
 }))
 
-vi.mock('@/hooks/use-pty', () => ({
-  usePty: () => ({
-    sessionId: null,
+vi.mock('@/hooks/use-pty-connection', () => ({
+  usePtyConnection: () => ({
     isConnected: false,
-    spawn: vi.fn().mockResolvedValue(undefined),
-    write: vi.fn(),
-    resize: vi.fn(),
-    kill: vi.fn().mockResolvedValue(undefined),
+    ptyWrite: vi.fn(),
+    ptyResize: vi.fn(),
   }),
 }))
 

@@ -59,7 +59,9 @@ pub struct PtySession {
     writer: Box<dyn Write + Send>,
     /// Child process handle
     child: Box<dyn Child + Send + Sync>,
-    /// Handle to the reader thread (for cleanup)
+    /// Handle to the reader thread.
+    /// Intentionally detached on drop — the thread exits naturally when the
+    /// master PTY is dropped (EOF/EIO on read). Joining is not required.
     _reader_thread: JoinHandle<()>,
     /// Process ID (used by list(), will be exposed via future commands)
     #[allow(dead_code)]
@@ -237,6 +239,10 @@ impl PtyManager {
     }
 
     /// Writes data to the PTY session's stdin.
+    ///
+    /// NOTE: This holds the PtyManager lock during `write_all` + `flush`.
+    /// If the PTY writer blocks (backpressure), all other sessions are also blocked.
+    /// TODO: For multi-session support, consider per-session locking or async writes.
     pub fn write(&mut self, session_id: &str, data: &[u8]) -> Result<(), PtyError> {
         let session =
             self.sessions
@@ -300,6 +306,10 @@ impl PtyManager {
 
         // Reap the zombie process
         let _ = session.child.wait();
+
+        // Reader thread is intentionally not joined here — it will exit on its
+        // own once the master PTY handle (_master) is dropped at end of scope,
+        // causing the reader to receive EOF or EIO.
 
         log::info!("PTY session killed: {session_id}");
         Ok(())
