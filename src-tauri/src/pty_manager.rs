@@ -116,8 +116,16 @@ impl PtyManager {
         validate_shell(&shell)?;
 
         let mut cmd = CommandBuilder::new(&shell);
-        for arg in &options.args {
-            cmd.arg(arg);
+        if options.args.is_empty() {
+            // Run as login shell when no args are provided.
+            // CommandBuilder::new() sets is_default_prog=false, so portable-pty
+            // won't prefix argv[0] with '-'. The -l flag ensures shell startup
+            // files (.zprofile, .bash_profile, etc.) are loaded.
+            cmd.arg("-l");
+        } else {
+            for arg in &options.args {
+                cmd.arg(arg);
+            }
         }
 
         // Set working directory (validated)
