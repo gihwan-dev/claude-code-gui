@@ -5,7 +5,7 @@
 set -euo pipefail
 
 # Extract the file path from the tool input JSON
-FILE_PATH=$(echo "$CLAUDE_TOOL_INPUT" | jq -r '.file_path // .filePath // empty')
+FILE_PATH=$(echo "${CLAUDE_TOOL_INPUT:-{}}" | jq -r '.file_path // .filePath // empty')
 
 if [[ -z "$FILE_PATH" ]]; then
   exit 0
