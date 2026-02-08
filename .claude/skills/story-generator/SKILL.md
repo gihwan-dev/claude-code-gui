@@ -39,11 +39,11 @@ argument: $1
 
 컴포넌트를 분석하여 다음 중 하나로 분류합니다:
 
-| 분류 | 조건 | 대응 |
-|------|------|------|
-| **Simple** | props만 필요 | 직접 렌더링 |
-| **MSW-dependent** | API 호출 (useQuery 등) 사용 | MSW handler 설정 필요 |
-| **Provider-dependent** | Context/Store 의존 | decorators로 Provider 래핑 |
+| 분류                   | 조건                        | 대응                       |
+| ---------------------- | --------------------------- | -------------------------- |
+| **Simple**             | props만 필요                | 직접 렌더링                |
+| **MSW-dependent**      | API 호출 (useQuery 등) 사용 | MSW handler 설정 필요      |
+| **Provider-dependent** | Context/Store 의존          | decorators로 Provider 래핑 |
 
 ### 5. Story 파일 생성
 
@@ -52,17 +52,17 @@ argument: $1
 #### (A) Simple 패턴
 
 ```tsx
-import type { Meta, StoryObj } from '@storybook/react';
-import { ComponentName } from '@/{path}';
+import type { Meta, StoryObj } from '@storybook/react'
+import { ComponentName } from '@/{path}'
 
 const meta: Meta<typeof ComponentName> = {
   title: 'Screenshots/{Layer}/{ComponentName}',
   component: ComponentName,
   parameters: { layout: 'centered' },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   render: () => (
@@ -70,14 +70,14 @@ export const Default: Story = {
       <ComponentName {...props} />
     </div>
   ),
-};
+}
 ```
 
 #### (B) MSW-dependent 패턴
 
 ```tsx
-import type { Meta, StoryObj } from '@storybook/react';
-import { ComponentName } from '@/{path}';
+import type { Meta, StoryObj } from '@storybook/react'
+import { ComponentName } from '@/{path}'
 // MSW handlers import
 
 const meta: Meta<typeof ComponentName> = {
@@ -91,10 +91,10 @@ const meta: Meta<typeof ComponentName> = {
       ],
     },
   },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   render: () => (
@@ -102,30 +102,30 @@ export const Default: Story = {
       <ComponentName {...props} />
     </div>
   ),
-};
+}
 ```
 
 #### (C) Provider-dependent 패턴
 
 ```tsx
-import type { Meta, StoryObj } from '@storybook/react';
-import { ComponentName } from '@/{path}';
+import type { Meta, StoryObj } from '@storybook/react'
+import { ComponentName } from '@/{path}'
 
 const meta: Meta<typeof ComponentName> = {
   title: 'Screenshots/{Layer}/{ComponentName}',
   component: ComponentName,
   parameters: { layout: 'centered' },
   decorators: [
-    (Story) => (
+    Story => (
       <SomeProvider>
         <Story />
       </SomeProvider>
     ),
   ],
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   render: () => (
@@ -133,7 +133,7 @@ export const Default: Story = {
       <ComponentName {...props} />
     </div>
   ),
-};
+}
 ```
 
 ### 6. 검증
@@ -184,17 +184,17 @@ export const Default: Story = {
 ### 출력 파일: `__screenshots__/Card.stories.tsx`
 
 ```tsx
-import type { Meta, StoryObj } from '@storybook/react';
-import { Card } from '@/shared/ui/card/Card';
+import type { Meta, StoryObj } from '@storybook/react'
+import { Card } from '@/shared/ui/card/Card'
 
 const meta: Meta<typeof Card> = {
   title: 'Screenshots/Shared/Card',
   component: Card,
   parameters: { layout: 'centered' },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   render: () => (
@@ -210,5 +210,5 @@ export const Default: Story = {
       </Card>
     </div>
   ),
-};
+}
 ```

@@ -30,7 +30,7 @@ Written by team-lead. **Minimum 500 words.**
 ## What "Perfect" Looks Like
 [Describe the ideal output in detail]
 
-## What "Good Enough" Looks Like  
+## What "Good Enough" Looks Like
 [Minimum viable answer that still solves the problem]
 
 ## Known Unknowns
@@ -218,7 +218,7 @@ Written by verifier after reading all paths and challenges.
 
 **Paths requiring revision:**
 - [ ] first-principles: [reason or "OK"]
-- [ ] pragmatist: [reason or "OK"]  
+- [ ] pragmatist: [reason or "OK"]
 - [ ] adversarial: [reason or "OK"]
 - [ ] innovator: [reason or "OK"]
 - [ ] optimizer: [reason or "OK"]
@@ -283,7 +283,7 @@ The deliverable. **Minimum 1000 words for detailed answer.**
 ### [Section 1]
 [Thorough explanation]
 
-### [Section 2]  
+### [Section 2]
 [Thorough explanation]
 
 ### [Section 3]

@@ -84,25 +84,27 @@ pnpm exec tsx .claude/skills/design-check/scripts/capture-figma-screenshot.ts \
 
 **CLI 옵션:**
 
-| 옵션 | 필수 | 기본값 | 설명 |
-|------|------|--------|------|
-| `--url` | `--file-key`+`--node-id` 없을 때 | - | Figma URL (fileKey, nodeId 자동 추출) |
-| `--file-key` | `--url` 없을 때 | - | Figma 파일 키 |
-| `--node-id` | `--url` 없을 때 | - | 노드 ID (예: `1:2`) |
-| `--output` | ✅ | - | 출력 PNG 파일 경로 |
-| `--scale` | ❌ | 2 | 내보내기 배율 |
+| 옵션         | 필수                             | 기본값 | 설명                                  |
+| ------------ | -------------------------------- | ------ | ------------------------------------- |
+| `--url`      | `--file-key`+`--node-id` 없을 때 | -      | Figma URL (fileKey, nodeId 자동 추출) |
+| `--file-key` | `--url` 없을 때                  | -      | Figma 파일 키                         |
+| `--node-id`  | `--url` 없을 때                  | -      | 노드 ID (예: `1:2`)                   |
+| `--output`   | ✅                               | -      | 출력 PNG 파일 경로                    |
+| `--scale`    | ❌                               | 2      | 내보내기 배율                         |
 
 **필수 환경변수:** `FIGMA_TOKEN` (`.env` 파일 또는 환경변수로 설정)
 
 **출력물:**
 
 스크립트 실행 시 PNG 파일과 함께 `.meta.json` 파일이 자동 생성됩니다:
+
 - 경로: `artifacts/screenshots/figma/{Name}.meta.json`
 - 내용: `{ "bbox": { "width", "height" }, "image": { "width", "height" }, "scale" }`
 - `bbox`는 Figma 노드의 CSS 논리 크기 (absoluteBoundingBox)
 - `image`는 실제 PNG 픽셀 크기 (= bbox × scale)
 
 **stdout 필드:**
+
 - `nodeWidth` / `nodeHeight`: Figma 노드 CSS 크기 → **Stage 2에서 `--container-width` 값으로 사용**
 - `imageSize`: 실제 PNG 픽셀 크기
 - 4096px 이상일 경우 경고 출력 (Figma 하드 리미트)
@@ -122,6 +124,7 @@ mcp__figma-desktop__get_design_context(nodeId: "{nodeId}")
 ```
 
 응답에서 다음을 추출합니다:
+
 - `width`, `height` → 뷰포트 크기 및 wrapper div 크기로 활용
 - 레이아웃, 색상, 타이포그래피 등 디자인 속성
 
@@ -142,21 +145,23 @@ Task A, B가 백그라운드에서 실행되는 동안 Main Agent가 직접 수�
 **3-1. 컴포넌트 분석:**
 
 컴포넌트 파일을 읽고 다음을 파악합니다:
+
 - export된 컴포넌트 (default/named)
 - Props 타입/인터페이스
 - import 의존성 (Context, Store, API 호출 여부)
 
 **3-2. 렌더링 요구사항 분류:**
 
-| 분류 | 조건 | 대응 |
-|------|------|------|
-| **Simple** | props만 필요 | 직접 렌더링 |
-| **MSW-dependent** | API 호출 (useQuery 등) 사용 | MSW handler 설정 |
-| **Provider-dependent** | Context/Store 의존 | decorators로 Provider 래핑 |
+| 분류                   | 조건                        | 대응                       |
+| ---------------------- | --------------------------- | -------------------------- |
+| **Simple**             | props만 필요                | 직접 렌더링                |
+| **MSW-dependent**      | API 호출 (useQuery 등) 사용 | MSW handler 설정           |
+| **Provider-dependent** | Context/Store 의존          | decorators로 Provider 래핑 |
 
 **3-3. 기존 Story 참조:**
 
 컴포넌트와 같은 디렉토리 또는 `__screenshots__/` 디렉토리에 `.stories.tsx` 파일이 있는지 확인합니다.
+
 - 있으면: args, decorators, parameters, render 함수 패턴을 참조
 - 없으면: 컴포넌트 분석 결과만으로 구성
 
@@ -167,17 +172,17 @@ Task A, B가 백그라운드에서 실행되는 동안 Main Agent가 직접 수�
 **중요:** bbox 값을 아직 모르므로 placeholder를 사용합니다.
 
 ```tsx
-import type { Meta, StoryObj } from '@storybook/react';
-import { ComponentName } from '@/{path}';
+import type { Meta, StoryObj } from '@storybook/react'
+import { ComponentName } from '@/{path}'
 
 const meta: Meta<typeof ComponentName> = {
   title: 'Screenshots/{Layer}/{ComponentName}',
   component: ComponentName,
   parameters: { layout: 'centered' },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   render: () => (
@@ -185,7 +190,7 @@ export const Default: Story = {
       <ComponentName {...props} />
     </div>
   ),
-};
+}
 ```
 
 - `{BBOX_WIDTH}`는 placeholder로, Stage 2에서 실제 값으로 교체됩니다.
@@ -195,6 +200,7 @@ export const Default: Story = {
 - render 함수는 반드시 단일 루트 엘리먼트를 반환해야 합니다 (캡처 스크립트가 `#storybook-root > *` 선택자 사용).
 
 **기존 파일 처리:**
+
 - `__screenshots__/` 디렉토리에 같은 이름의 Story가 이미 있으면 사용자에게 덮어쓸지 확인합니다.
 
 #### Stage 1 완료 게이트
@@ -207,19 +213,21 @@ Task B의 결과는 Phase 7(보고서 생성)에서 사용되므로, Stage 2 진
 
 #### Stage 1 에러 처리
 
-| 상황 | 대응 |
-|------|------|
-| Task A 실패 | **전체 중단** - bbox 없이 진행 불가. 에러 메시지 확인 후 안내 |
-| Task B 실패 | **경고 후 계속** - Design Tokens 섹션 생략, 나머지 워크플로우 진행 |
-| 컴포넌트 파일 없음 | **전체 중단** - 경로 확인 안내 |
+| 상황               | 대응                                                               |
+| ------------------ | ------------------------------------------------------------------ |
+| Task A 실패        | **전체 중단** - bbox 없이 진행 불가. 에러 메시지 확인 후 안내      |
+| Task B 실패        | **경고 후 계속** - Design Tokens 섹션 생략, 나머지 워크플로우 진행 |
+| 컴포넌트 파일 없음 | **전체 중단** - 경로 확인 안내                                     |
 
 **Task A 에러 처리 상세:**
+
 - `FIGMA_TOKEN` 미설정 시: 토큰 생성 안내 (https://www.figma.com/developers/api#access-tokens)
 - API 403 Forbidden: 파일 접근 권한 확인 안내
 - API 404 Not Found: fileKey 또는 nodeId 확인 안내
 - 이미지 URL null: 노드가 렌더링 불가능한 경우 안내 (Frame, Component, Instance 등만 가능)
 
 **Task B 에러 처리 상세:**
+
 - MCP 도구 호출 실패 시: Figma Desktop 앱이 실행 중인지 확인하라고 안내합니다.
 - 경고만 출력하고 워크플로우는 계속 진행합니다.
 
@@ -250,6 +258,7 @@ title: "Screenshots/Shared/Card" + export: "Default"
 ```
 
 PascalCase → kebab-case 변환:
+
 - `Default` → `default`
 - `WithIcon` → `with-icon`
 
@@ -275,29 +284,30 @@ pnpm exec tsx .claude/skills/component-screenshot/scripts/capture-screenshot.ts 
 
 **CLI 옵션:**
 
-| 옵션 | 필수 | 기본값 | 설명 |
-|------|------|--------|------|
-| `--story-id` | ✅ | - | Storybook story ID |
-| `--output` | ✅ | - | 출력 PNG 파일 경로 |
-| `--width` | ❌ | 1280 | 뷰포트 너비 |
-| `--height` | ❌ | 800 | 뷰포트 높이 |
-| `--port` | ❌ | 6008 | 정적 서버 포트 |
-| `--timeout` | ❌ | 30000 | 타임아웃 (ms) |
-| `--rebuild` | ❌ | false | 기존 빌드 무시하고 강제 리빌드 |
-| `--scale` | ❌ | 2 | 디바이스 스케일 팩터 |
-| `--container-width` | ❌ | - | 컨테이너 CSS width 강제 (px). Figma bbox width 사용 권장 |
+| 옵션                | 필수 | 기본값 | 설명                                                     |
+| ------------------- | ---- | ------ | -------------------------------------------------------- |
+| `--story-id`        | ✅   | -      | Storybook story ID                                       |
+| `--output`          | ✅   | -      | 출력 PNG 파일 경로                                       |
+| `--width`           | ❌   | 1280   | 뷰포트 너비                                              |
+| `--height`          | ❌   | 800    | 뷰포트 높이                                              |
+| `--port`            | ❌   | 6008   | 정적 서버 포트                                           |
+| `--timeout`         | ❌   | 30000  | 타임아웃 (ms)                                            |
+| `--rebuild`         | ❌   | false  | 기존 빌드 무시하고 강제 리빌드                           |
+| `--scale`           | ❌   | 2      | 디바이스 스케일 팩터                                     |
+| `--container-width` | ❌   | -      | 컨테이너 CSS width 강제 (px). Figma bbox width 사용 권장 |
 
 **결과 검증:**
+
 - PNG 파일이 생성되었는지 확인
 - 파일 크기가 0보다 큰지 확인
 
 #### Stage 2 에러 처리
 
-| 상황 | 대응 |
-|------|------|
-| Storybook 빌드 실패 | `pnpm build-storybook` 수동 실행으로 에러 확인 제안 |
+| 상황                  | 대응                                                                                                 |
+| --------------------- | ---------------------------------------------------------------------------------------------------- |
+| Storybook 빌드 실패   | `pnpm build-storybook` 수동 실행으로 에러 확인 제안                                                  |
 | 빈 스크린샷 (0 bytes) | 정적 서버에서 Story 직접 확인 제안: `http://localhost:6008/iframe.html?id={story-id}&viewMode=story` |
-| 캡처 타임아웃 | `--timeout` 값 증가 제안 |
+| 캡처 타임아웃         | `--timeout` 값 증가 제안                                                                             |
 
 ---
 
@@ -315,6 +325,7 @@ pnpm exec tsx .claude/skills/design-check/scripts/compare-screenshots.ts \
 **stdout 파싱:**
 
 스크립트 출력에서 다음 값을 추출합니다:
+
 - `baseSize` / `currentSize`: 각 이미지의 픽셀 크기
 - `Size mismatch` 경고 (있을 경우): 크기 불일치 시 리사이즈 폴백이 작동했음을 의미
 - `diffPixels`: 차이 픽셀 수
@@ -330,30 +341,31 @@ Claude의 시각 분석 능력을 활용하여 디자인 차이를 정성적으�
 **6-1. 이미지 로드:**
 
 Read tool로 다음 이미지를 로드합니다 (MCP get_screenshot 호출 불필요, Task A에서 파일로 저장됨):
+
 - `artifacts/screenshots/figma/{Name}.png` (Figma 디자인 - REST API로 저장됨)
 - `artifacts/screenshots/impl/{Name}.png` (구현 결과)
 
 **6-2. 비교 항목:**
 
-| 항목 | 확인 내용 |
-|------|----------|
-| 레이아웃 | 요소 배치, 정렬, 간격 |
-| 타이포그래피 | 폰트 크기, 굵기, 줄 높이 |
-| 색상 | 배경색, 텍스트 색상, 보더 색상 |
-| 간격 | padding, margin, gap |
-| 아이콘/이미지 | 크기, 위치, 색상 |
-| 반응형 | 컨테이너 크기 대비 적절성 |
+| 항목          | 확인 내용                      |
+| ------------- | ------------------------------ |
+| 레이아웃      | 요소 배치, 정렬, 간격          |
+| 타이포그래피  | 폰트 크기, 굵기, 줄 높이       |
+| 색상          | 배경색, 텍스트 색상, 보더 색상 |
+| 간격          | padding, margin, gap           |
+| 아이콘/이미지 | 크기, 위치, 색상               |
+| 반응형        | 컨테이너 크기 대비 적절성      |
 
 **6-3. 발견사항 분류:**
 
 각 차이점에 severity를 부여합니다:
 
-| Severity | 기준 |
-|----------|------|
+| Severity     | 기준                                         |
+| ------------ | -------------------------------------------- |
 | **Critical** | 레이아웃 깨짐, 누락된 요소, 완전히 다른 색상 |
-| **Major** | 눈에 띄는 간격/크기 차이, 폰트 불일치 |
-| **Minor** | 미세한 간격 차이, 약간의 색상 차이 |
-| **Nitpick** | 서브픽셀 렌더링 차이, 안티앨리어싱 차이 |
+| **Major**    | 눈에 띄는 간격/크기 차이, 폰트 불일치        |
+| **Minor**    | 미세한 간격 차이, 약간의 색상 차이           |
+| **Nitpick**  | 서브픽셀 렌더링 차이, 안티앨리어싱 차이      |
 
 ### Phase 7. 보고서 생성
 
@@ -378,24 +390,28 @@ Read tool로 다음 이미지를 로드합니다 (MCP get_screenshot 호출 불�
 
 ## Quantitative Analysis
 
-| Metric | Value |
-|--------|-------|
+| Metric      | Value        |
+| ----------- | ------------ |
 | Diff Pixels | {diffPixels} |
-| Diff Ratio | {diffRatio}% |
-| Result | {pass/fail} |
+| Diff Ratio  | {diffRatio}% |
+| Result      | {pass/fail}  |
 
 ## Qualitative Analysis
 
 ### Critical Issues
+
 {없으면 "None" 표시}
 
 ### Major Issues
+
 {없으면 "None" 표시}
 
 ### Minor Issues
+
 {없으면 "None" 표시}
 
 ### Nitpicks
+
 {없으면 "None" 표시}
 
 ## Design Tokens
@@ -408,30 +424,30 @@ Read tool로 다음 이미지를 로드합니다 (MCP get_screenshot 호출 불�
 
 ## Artifacts
 
-| Artifact | Path |
-|----------|------|
-| Figma Screenshot | artifacts/screenshots/figma/{Name}.png |
-| Figma Metadata | artifacts/screenshots/figma/{Name}.meta.json |
-| Implementation Screenshot | artifacts/screenshots/impl/{Name}.png |
-| Diff Image | artifacts/screenshots/diff/{Name}.png |
-| Story File | __screenshots__/{Name}.stories.tsx |
+| Artifact                  | Path                                         |
+| ------------------------- | -------------------------------------------- |
+| Figma Screenshot          | artifacts/screenshots/figma/{Name}.png       |
+| Figma Metadata            | artifacts/screenshots/figma/{Name}.meta.json |
+| Implementation Screenshot | artifacts/screenshots/impl/{Name}.png        |
+| Diff Image                | artifacts/screenshots/diff/{Name}.png        |
+| Story File                | **screenshots**/{Name}.stories.tsx           |
 ```
 
 ## 에러 처리 (전체)
 
-| 상황 | 대응 |
-|------|------|
-| `FIGMA_TOKEN` 미설정 | 토큰 생성 안내: https://www.figma.com/developers/api#access-tokens |
-| Figma API 403 | 파일 접근 권한 확인, 토큰 권한 확인 안내 |
-| Figma API 404 | fileKey 또는 nodeId 확인 안내 |
-| Figma 이미지 URL null | 렌더링 불가능한 노드 안내 (Frame, Component, Instance 등만 지원) |
-| Figma 앱 미실행 | "Figma Desktop 앱을 실행하고 해당 파일을 열어주세요." 안내 (Task B MCP 도구용) |
-| Figma URL 형식 오류 | URL에서 `node-id` 파라미터를 찾을 수 없다고 안내, 올바른 URL 형식 예시 제공 |
-| 컴포넌트 파일 없음 | 경로 확인 안내 |
-| 기존 아티팩트 존재 | 사용자에게 재사용/덮어쓰기 선택 요청 |
-| Storybook 빌드 실패 | `pnpm build-storybook` 수동 실행 안내 |
-| 캡처 스크립트 실패 | 에러 메시지 전달 및 수동 실행 커맨드 안내 |
-| 비교 스크립트 실패 | 이미지 크기 불일치 여부 확인 안내 |
+| 상황                  | 대응                                                                           |
+| --------------------- | ------------------------------------------------------------------------------ |
+| `FIGMA_TOKEN` 미설정  | 토큰 생성 안내: https://www.figma.com/developers/api#access-tokens             |
+| Figma API 403         | 파일 접근 권한 확인, 토큰 권한 확인 안내                                       |
+| Figma API 404         | fileKey 또는 nodeId 확인 안내                                                  |
+| Figma 이미지 URL null | 렌더링 불가능한 노드 안내 (Frame, Component, Instance 등만 지원)               |
+| Figma 앱 미실행       | "Figma Desktop 앱을 실행하고 해당 파일을 열어주세요." 안내 (Task B MCP 도구용) |
+| Figma URL 형식 오류   | URL에서 `node-id` 파라미터를 찾을 수 없다고 안내, 올바른 URL 형식 예시 제공    |
+| 컴포넌트 파일 없음    | 경로 확인 안내                                                                 |
+| 기존 아티팩트 존재    | 사용자에게 재사용/덮어쓰기 선택 요청                                           |
+| Storybook 빌드 실패   | `pnpm build-storybook` 수동 실행 안내                                          |
+| 캡처 스크립트 실패    | 에러 메시지 전달 및 수동 실행 커맨드 안내                                      |
+| 비교 스크립트 실패    | 이미지 크기 불일치 여부 확인 안내                                              |
 
 ## 예시
 

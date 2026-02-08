@@ -68,9 +68,11 @@ disable-model-invocation: false
    **CRITICAL**: You must evaluate the code strictly based on the **"React Clean Code Scorecard"** framework provided below. Do not use generic "clean code" advice; use these specific metrics.
 
    <FRAMEWORK_START>
+
    # 리액트 애플리케이션의 아키텍처 건전성 및 클린 코드 품질 평가를 위한 정량적 지표 프레임워크
 
    ## 1. 서론
+
    주관적인 "클린 코드"가 아닌, 정량적이고 객관적인 엔지니어링 지표로 평가합니다.
 
    ## 2. 구조적 복잡도 (Structural Complexity)
@@ -96,7 +98,6 @@ disable-model-invocation: false
    - **Boolean Props**: 다수의 boolean 대신 Enum/Status 문자열 사용 권장.
    - **Naming**: `on` 접두사(Props) / `handle` 접두사(Implementation) 일관성.
 
-
    ## 6. 정적 분석 지표 (ESLint)
    - `react-hooks/rules-of-hooks`: 0 위반
    - `max-lines-per-function`: < 100
@@ -111,16 +112,17 @@ disable-model-invocation: false
    - **Global State Density**: 꼭 필요한 전역 상태인지 확인.
 
    ## 9. 종합 스코어카드
+
    평가 결과는 아래 표 형식을 포함하여 정리해야 합니다.
 
-   | 카테고리 | 평가 항목 | 측정/관찰 값 | 상태 (양호/주의/위험) | 비고 |
-   | --- | --- | --- | --- | --- |
-   | 복잡도 | 순환 복잡도 (CC) | ... | ... | ... |
-   | 규모 | 라인 수 (LoC) | ... | ... | ... |
-   | 인터페이스 | Props 개수 | ... | ... | ... |
-   | 결합도 | Props 드릴링 깊이 | ... | ... | ... |
-   | 응집도 | LCOM4 (추정) | ... | ... | ... |
-   | 위생 | 훅 의존성 준수 | ... | ... | ... |
+   | 카테고리   | 평가 항목         | 측정/관찰 값 | 상태 (양호/주의/위험) | 비고 |
+   | ---------- | ----------------- | ------------ | --------------------- | ---- |
+   | 복잡도     | 순환 복잡도 (CC)  | ...          | ...                   | ...  |
+   | 규모       | 라인 수 (LoC)     | ...          | ...                   | ...  |
+   | 인터페이스 | Props 개수        | ...          | ...                   | ...  |
+   | 결합도     | Props 드릴링 깊이 | ...          | ...                   | ...  |
+   | 응집도     | LCOM4 (추정)      | ...          | ...                   | ...  |
+   | 위생       | 훅 의존성 준수    | ...          | ...                   | ...  |
 
    <FRAMEWORK_END>
 

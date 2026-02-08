@@ -32,11 +32,11 @@ Storybook 내부에서 사용하는 story ID를 생성합니다.
 
 **변환 예시:**
 
-| title | export | Story ID |
-|-------|--------|----------|
-| `Screenshots/Shared/Card` | `Default` | `screenshots-shared-card--default` |
-| `Screenshots/Features/FilterBar/FilterList` | `Default` | `screenshots-features-filterbar-filterlist--default` |
-| `Screenshots/Shared/Button` | `WithIcon` | `screenshots-shared-button--with-icon` |
+| title                                       | export     | Story ID                                             |
+| ------------------------------------------- | ---------- | ---------------------------------------------------- |
+| `Screenshots/Shared/Card`                   | `Default`  | `screenshots-shared-card--default`                   |
+| `Screenshots/Features/FilterBar/FilterList` | `Default`  | `screenshots-features-filterbar-filterlist--default` |
+| `Screenshots/Shared/Button`                 | `WithIcon` | `screenshots-shared-button--with-icon`               |
 
 **상세 변환 과정:**
 
@@ -48,6 +48,7 @@ title: "Screenshots/Shared/Card" + export: "Default"
 ```
 
 PascalCase export를 kebab-case로 변환:
+
 - `Default` → `default`
 - `WithIcon` → `with-icon`
 - `MSWExample` → `msw-example`
@@ -75,15 +76,15 @@ pnpm exec tsx .claude/skills/component-screenshot/scripts/capture-screenshot.ts 
 
 **스크립트 CLI 옵션:**
 
-| 옵션 | 필수 | 기본값 | 설명 |
-|------|------|--------|------|
-| `--story-id` | ✅ | - | Storybook story ID |
-| `--output` | ✅ | - | 출력 PNG 파일 경로 |
-| `--width` | ❌ | 1280 | 뷰포트 너비 |
-| `--height` | ❌ | 800 | 뷰포트 높이 |
-| `--port` | ❌ | 6008 | 정적 서버 포트 |
-| `--timeout` | ❌ | 30000 | 타임아웃 (ms) |
-| `--rebuild` | ❌ | false | 기존 빌드 무시하고 강제 리빌드 |
+| 옵션         | 필수 | 기본값 | 설명                           |
+| ------------ | ---- | ------ | ------------------------------ |
+| `--story-id` | ✅   | -      | Storybook story ID             |
+| `--output`   | ✅   | -      | 출력 PNG 파일 경로             |
+| `--width`    | ❌   | 1280   | 뷰포트 너비                    |
+| `--height`   | ❌   | 800    | 뷰포트 높이                    |
+| `--port`     | ❌   | 6008   | 정적 서버 포트                 |
+| `--timeout`  | ❌   | 30000  | 타임아웃 (ms)                  |
+| `--rebuild`  | ❌   | false  | 기존 빌드 무시하고 강제 리빌드 |
 
 - 스크립트는 `.dist/iframe.html`이 없으면 자동으로 `pnpm build-storybook`을 실행합니다.
 - `--rebuild` 플래그를 사용하면 기존 빌드를 무시하고 항상 새로 빌드합니다.
@@ -99,13 +100,13 @@ pnpm exec tsx .claude/skills/component-screenshot/scripts/capture-screenshot.ts 
 
 ## 에러 처리
 
-| 상황 | 대응 |
-|------|------|
-| Story 파일 없음 | 실행 중단, 파일 경로 확인 안내 |
-| title 파싱 실패 | Story 파일 형식 확인 안내 |
-| Storybook 빌드 실패 | `pnpm build-storybook` 수동 실행으로 에러 확인 제안 |
+| 상황                  | 대응                                                                                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Story 파일 없음       | 실행 중단, 파일 경로 확인 안내                                                                                             |
+| title 파싱 실패       | Story 파일 형식 확인 안내                                                                                                  |
+| Storybook 빌드 실패   | `pnpm build-storybook` 수동 실행으로 에러 확인 제안                                                                        |
 | 빈 스크린샷 (0 bytes) | Story ID를 브라우저에서 직접 확인 제안: 정적 서버 실행 후 `http://localhost:6006/iframe.html?id={story-id}&viewMode=story` |
-| 캡처 스크립트 에러 | 에러 메시지 전달 및 수동 실행 커맨드 안내 |
+| 캡처 스크립트 에러    | 에러 메시지 전달 및 수동 실행 커맨드 안내                                                                                  |
 
 ## 예시
 

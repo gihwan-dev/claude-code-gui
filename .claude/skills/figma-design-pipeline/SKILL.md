@@ -36,6 +36,7 @@ argument: $ARGUMENTS
 동일한 Figma URL과 컴포넌트 경로를 인자로 전달합니다.
 
 **완료 게이트:**
+
 - 대상 파일이 존재하는지 확인
 - 파일 내용이 비어있지 않은지 확인
 - 게이트 실패 시 사용자에게 알리고 중단
@@ -75,12 +76,12 @@ design-check에서 **Critical** 또는 **Major** 이슈가 발견된 경우:
 
 ## 에러 처리
 
-| 상황 | 대응 |
-|------|------|
+| 상황                 | 대응                                                               |
+| -------------------- | ------------------------------------------------------------------ |
 | `FIGMA_TOKEN` 미설정 | 토큰 생성 안내: https://www.figma.com/developers/api#access-tokens |
-| Figma URL 형식 오류 | 올바른 URL 형식 예시 제공 |
-| figma-to-code 실패 | 에러 내용 출력, design-check 진행하지 않음 |
-| design-check 실패 | 에러 내용 출력, 가능한 경우 부분 결과 표시 |
+| Figma URL 형식 오류  | 올바른 URL 형식 예시 제공                                          |
+| figma-to-code 실패   | 에러 내용 출력, design-check 진행하지 않음                         |
+| design-check 실패    | 에러 내용 출력, 가능한 경우 부분 결과 표시                         |
 
 ## 예시
 

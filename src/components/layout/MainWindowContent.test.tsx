@@ -16,10 +16,7 @@ describe('MainWindowContent', () => {
   it('renders sessions view when active', () => {
     useUIStore.setState({ activeView: 'sessions' })
     render(<MainWindowContent />)
-    expect(screen.getByText('Sessions')).toBeInTheDocument()
-    expect(
-      screen.getByText('Session management coming soon')
-    ).toBeInTheDocument()
+    expect(screen.getByText('Terminal')).toBeInTheDocument()
   })
 
   it('renders projects view when active', () => {

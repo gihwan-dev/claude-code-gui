@@ -20,11 +20,11 @@ argument-hint: 테스트 대상 (예: RowOrdering 브라우저 테스트, cellMe
 
 요청을 분석하여 적절한 테스트 유형을 결정합니다.
 
-| 파일 패턴 | 테스트 유형 | 참조 문서 |
-|-----------|-----------|----------|
-| `*.browser.test.tsx` | 브라우저 통합 테스트 | `references/browser-testing.md` |
-| `*.spec.ts` | 기능/유틸리티 유닛 테스트 | `references/testing-principles.md` |
-| `*.test.ts(x)` | jsdom 유닛 테스트 | `references/testing-principles.md` |
+| 파일 패턴            | 테스트 유형               | 참조 문서                          |
+| -------------------- | ------------------------- | ---------------------------------- |
+| `*.browser.test.tsx` | 브라우저 통합 테스트      | `references/browser-testing.md`    |
+| `*.spec.ts`          | 기능/유틸리티 유닛 테스트 | `references/testing-principles.md` |
+| `*.test.ts(x)`       | jsdom 유닛 테스트         | `references/testing-principles.md` |
 
 ## Step 2: 레퍼런스 참조
 
