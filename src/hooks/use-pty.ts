@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef } from 'react'
 import { Channel } from '@tauri-apps/api/core'
 import { commands } from '@/lib/tauri-bindings'
 import type { PtyEvent, SpawnOptions } from '@/lib/tauri-bindings'
+import { debug, error as logError } from '@/lib/logger'
 import { useTerminalStore } from '@/store/terminal-store'
+
+const encoder = new TextEncoder()
 
 interface UsePtyOptions {
   onData?: (data: Uint8Array) => void
@@ -45,12 +48,11 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
     const channel = new Channel<PtyEvent>()
     channelRef.current = channel
     channel.onmessage = event => {
-      console.debug(
-        '[pty] channel event:',
-        event.event,
+      debug(
+        `[pty] channel event: ${event.event}`,
         event.event === 'Output'
-          ? `${event.data.data.length} bytes`
-          : JSON.stringify(event.data)
+          ? { bytes: event.data.data.length }
+          : { data: event.data }
       )
       if (event.event === 'Output') {
         onDataRef.current?.(new Uint8Array(event.data.data))
@@ -93,14 +95,13 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
       const id = sessionIdRef.current
       if (!id) return
 
-      const encoder = new TextEncoder()
       const bytes = Array.from(encoder.encode(data))
       commands.ptyWrite(id, bytes).then(result => {
         if (result.status === 'error') {
           if (result.error.type === 'SessionNotFound') {
             handleSessionLost()
           }
-          console.error('[pty] write failed:', result.error)
+          logError('[pty] write failed', { error: result.error })
         }
       })
     },
@@ -117,7 +118,7 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
           if (result.error.type === 'SessionNotFound') {
             handleSessionLost()
           }
-          console.error('[pty] resize failed:', result.error)
+          logError('[pty] resize failed', { error: result.error })
         }
       })
     },
@@ -130,7 +131,7 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
 
     const result = await commands.ptyKill(id)
     if (result.status === 'error') {
-      console.error('[pty] kill failed:', result.error)
+      logError('[pty] kill failed', { error: result.error })
     }
     // kill 실패 여부와 무관하게 로컬 상태 정리 (이미 죽은 세션 kill 시도 등)
     handleSessionLost()

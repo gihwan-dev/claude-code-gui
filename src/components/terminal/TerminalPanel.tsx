@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import '@xterm/xterm/css/xterm.css'
 import { usePty } from '@/hooks/use-pty'
 import { useTerminal } from '@/hooks/use-terminal'
+import { debug } from '@/lib/logger'
 import { useTerminalStore } from '@/store/terminal-store'
 
 export function TerminalPanel() {
@@ -27,12 +28,10 @@ export function TerminalPanel() {
   } = usePty({
     onData: data => {
       const decoded = decoderRef.current.decode(data, { stream: true })
-      console.debug(
-        '[terminal] PTY output:',
-        decoded.length,
-        'chars, writeRef:',
-        !!writeRef.current
-      )
+      debug('[terminal] PTY output', {
+        chars: decoded.length,
+        writeReady: !!writeRef.current,
+      })
       if (writeRef.current) {
         writeRef.current(decoded)
       } else {

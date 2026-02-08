@@ -514,7 +514,7 @@ mod tests {
         let id1 = manager
             .spawn(interactive_spawn_options(), channel1)
             .unwrap();
-        let _id2 = manager
+        let id2 = manager
             .spawn(interactive_spawn_options(), channel2)
             .unwrap();
 
@@ -524,6 +524,8 @@ mod tests {
         manager.kill(&id1).unwrap();
         let sessions = manager.list();
         assert_eq!(sessions.len(), 1);
+
+        manager.kill(&id2).unwrap();
     }
 
     #[test]
