@@ -71,6 +71,8 @@
   "statusBar.tokens": "Tokens",
   "statusBar.disconnected": "Disconnected",
   "statusBar.connected": "Connected",
+  "statusBar.connecting": "Connecting...",
+  "statusBar.error": "Connection Error",
 
   "commands.group.navigation": "Navigation",
   "commands.group.settings": "Settings",
