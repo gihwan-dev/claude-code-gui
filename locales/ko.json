@@ -137,8 +137,5 @@
 
   "terminal.title": "터미널",
   "terminal.initializing": "초기화 중...",
-  "terminal.dimensions": "{{cols}}×{{rows}}",
-  "terminal.ready": "준비됨",
-  "terminal.webgl": "WebGL",
-  "terminal.canvas": "Canvas"
+  "terminal.dimensions": "{{cols}}×{{rows}}"
 }

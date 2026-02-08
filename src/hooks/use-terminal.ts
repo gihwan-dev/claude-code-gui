@@ -35,7 +35,8 @@ async function tryLoadWebGL(terminal: Terminal): Promise<boolean> {
     const webglAddon = new WebglAddon()
     terminal.loadAddon(webglAddon)
     return true
-  } catch {
+  } catch (error) {
+    console.debug('[terminal] WebGL addon failed, using canvas fallback', error)
     return false
   }
 }

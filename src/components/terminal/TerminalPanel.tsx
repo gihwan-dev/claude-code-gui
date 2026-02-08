@@ -26,7 +26,9 @@ export function TerminalPanel() {
       <div className="flex items-center justify-between border-b px-3 py-1.5">
         <span className="text-sm font-medium">{t('terminal.title')}</span>
         <span className="text-xs text-muted-foreground">
-          {isReady ? `${cols}\u00d7${rows}` : t('terminal.initializing')}
+          {isReady
+            ? t('terminal.dimensions', { cols, rows })
+            : t('terminal.initializing')}
         </span>
       </div>
       <div ref={terminalRef} className="terminal-container flex-1" />
