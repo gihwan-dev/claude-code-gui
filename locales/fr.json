@@ -52,6 +52,26 @@
   "common.disabled": "Désactivé",
   "common.reset": "Réinitialiser",
 
+  "sidebar.title": "Claude Code GUI",
+  "sidebar.sessions": "Sessions",
+  "sidebar.projects": "Projets",
+  "sidebar.settings": "Paramètres",
+
+  "views.welcome.title": "Bienvenue dans Claude Code GUI",
+  "views.welcome.subtitle": "Sélectionnez une vue dans la barre latérale pour commencer",
+  "views.welcome.newSession": "Nouvelle session",
+  "views.welcome.openProject": "Ouvrir un projet",
+  "views.sessions.title": "Sessions",
+  "views.sessions.comingSoon": "Gestion des sessions bientôt disponible",
+  "views.projects.title": "Projets",
+  "views.projects.comingSoon": "Gestion des projets bientôt disponible",
+
+  "statusBar.session": "Session",
+  "statusBar.noSession": "Aucune session active",
+  "statusBar.tokens": "Jetons",
+  "statusBar.disconnected": "Déconnecté",
+  "statusBar.connected": "Connecté",
+
   "commands.group.navigation": "Navigation",
   "commands.group.settings": "Paramètres",
   "commands.group.window": "Fenêtre",
@@ -80,6 +100,13 @@
   "commands.windowFullscreen.description": "Passer en mode plein écran",
   "commands.windowExitFullscreen.label": "Quitter le plein écran",
   "commands.windowExitFullscreen.description": "Quitter le mode plein écran",
+
+  "commands.viewWelcome.label": "Aller à l'accueil",
+  "commands.viewWelcome.description": "Basculer vers la vue d'accueil",
+  "commands.viewSessions.label": "Aller aux sessions",
+  "commands.viewSessions.description": "Basculer vers la vue des sessions",
+  "commands.viewProjects.label": "Aller aux projets",
+  "commands.viewProjects.description": "Basculer vers la vue des projets",
 
   "commands.testToast.label": "Tester la notification toast",
   "commands.testToast.description": "Afficher une notification toast de test",

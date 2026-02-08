@@ -7,6 +7,7 @@ import { TitleBar } from '@/components/titlebar/TitleBar'
 import { LeftSideBar } from './LeftSideBar'
 import { RightSideBar } from './RightSideBar'
 import { MainWindowContent } from './MainWindowContent'
+import { StatusBar } from './StatusBar'
 import { CommandPalette } from '@/components/command-palette/CommandPalette'
 import { PreferencesDialog } from '@/components/preferences/PreferencesDialog'
 import { Toaster } from 'sonner'
@@ -74,6 +75,8 @@ export function MainWindow() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
+
+      <StatusBar />
 
       {/* Global UI Components (hidden until triggered) */}
       <CommandPalette />

@@ -7,7 +7,7 @@ import App from './App'
 describe('App', () => {
   it('renders main window layout', () => {
     render(<App />)
-    expect(screen.getByText('Ready')).toBeInTheDocument()
+    expect(screen.getByText('Welcome to Claude Code GUI')).toBeInTheDocument()
   })
 
   it('renders title bar with traffic light buttons', () => {

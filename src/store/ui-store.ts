@@ -1,12 +1,15 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
+export type AppView = 'welcome' | 'sessions' | 'projects'
+
 interface UIState {
   leftSidebarVisible: boolean
   rightSidebarVisible: boolean
   commandPaletteOpen: boolean
   preferencesOpen: boolean
   lastQuickPaneEntry: string | null
+  activeView: AppView
 
   toggleLeftSidebar: () => void
   setLeftSidebarVisible: (visible: boolean) => void
@@ -17,6 +20,7 @@ interface UIState {
   togglePreferences: () => void
   setPreferencesOpen: (open: boolean) => void
   setLastQuickPaneEntry: (text: string) => void
+  setActiveView: (view: AppView) => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -27,6 +31,7 @@ export const useUIStore = create<UIState>()(
       commandPaletteOpen: false,
       preferencesOpen: false,
       lastQuickPaneEntry: null,
+      activeView: 'welcome',
 
       toggleLeftSidebar: () =>
         set(
@@ -78,6 +83,9 @@ export const useUIStore = create<UIState>()(
 
       setLastQuickPaneEntry: text =>
         set({ lastQuickPaneEntry: text }, undefined, 'setLastQuickPaneEntry'),
+
+      setActiveView: view =>
+        set({ activeView: view }, undefined, 'setActiveView'),
     }),
     {
       name: 'ui-store',

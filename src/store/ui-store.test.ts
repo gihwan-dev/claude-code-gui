@@ -9,6 +9,7 @@ describe('UIStore', () => {
       rightSidebarVisible: true,
       commandPaletteOpen: false,
       preferencesOpen: false,
+      activeView: 'welcome',
     })
   })
 
@@ -18,6 +19,7 @@ describe('UIStore', () => {
     expect(state.rightSidebarVisible).toBe(true)
     expect(state.commandPaletteOpen).toBe(false)
     expect(state.preferencesOpen).toBe(false)
+    expect(state.activeView).toBe('welcome')
   })
 
   it('toggles left sidebar visibility', () => {
@@ -58,5 +60,18 @@ describe('UIStore', () => {
 
     toggleCommandPalette()
     expect(useUIStore.getState().commandPaletteOpen).toBe(false)
+  })
+
+  it('sets active view', () => {
+    const { setActiveView } = useUIStore.getState()
+
+    setActiveView('sessions')
+    expect(useUIStore.getState().activeView).toBe('sessions')
+
+    setActiveView('projects')
+    expect(useUIStore.getState().activeView).toBe('projects')
+
+    setActiveView('welcome')
+    expect(useUIStore.getState().activeView).toBe('welcome')
   })
 })

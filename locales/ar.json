@@ -52,6 +52,26 @@
   "common.disabled": "معطّل",
   "common.reset": "إعادة تعيين",
 
+  "sidebar.title": "Claude Code GUI",
+  "sidebar.sessions": "الجلسات",
+  "sidebar.projects": "المشاريع",
+  "sidebar.settings": "الإعدادات",
+
+  "views.welcome.title": "مرحباً بك في Claude Code GUI",
+  "views.welcome.subtitle": "اختر عرضاً من الشريط الجانبي للبدء",
+  "views.welcome.newSession": "جلسة جديدة",
+  "views.welcome.openProject": "فتح مشروع",
+  "views.sessions.title": "الجلسات",
+  "views.sessions.comingSoon": "إدارة الجلسات قريباً",
+  "views.projects.title": "المشاريع",
+  "views.projects.comingSoon": "إدارة المشاريع قريباً",
+
+  "statusBar.session": "الجلسة",
+  "statusBar.noSession": "لا توجد جلسة نشطة",
+  "statusBar.tokens": "الرموز",
+  "statusBar.disconnected": "غير متصل",
+  "statusBar.connected": "متصل",
+
   "commands.group.navigation": "التنقل",
   "commands.group.settings": "الإعدادات",
   "commands.group.window": "النافذة",
@@ -80,6 +100,13 @@
   "commands.windowFullscreen.description": "الدخول إلى وضع ملء الشاشة",
   "commands.windowExitFullscreen.label": "الخروج من ملء الشاشة",
   "commands.windowExitFullscreen.description": "الخروج من وضع ملء الشاشة",
+
+  "commands.viewWelcome.label": "الذهاب إلى الترحيب",
+  "commands.viewWelcome.description": "التبديل إلى عرض الترحيب",
+  "commands.viewSessions.label": "الذهاب إلى الجلسات",
+  "commands.viewSessions.description": "التبديل إلى عرض الجلسات",
+  "commands.viewProjects.label": "الذهاب إلى المشاريع",
+  "commands.viewProjects.description": "التبديل إلى عرض المشاريع",
 
   "commands.testToast.label": "اختبار إشعار التنبيه",
   "commands.testToast.description": "إظهار إشعار تنبيه اختباري",
