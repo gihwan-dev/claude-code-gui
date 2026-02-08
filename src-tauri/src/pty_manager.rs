@@ -589,6 +589,332 @@ mod tests {
         manager.kill(&result.unwrap()).unwrap();
     }
 
+    /// Collects output from the channel until the predicate returns true or timeout.
+    /// Returns the accumulated output as a String.
+    fn collect_output_until(
+        rx: &mpsc::Receiver<PtyEvent>,
+        timeout: std::time::Duration,
+        predicate: impl Fn(&str) -> bool,
+    ) -> String {
+        let mut output = String::new();
+        let deadline = std::time::Instant::now() + timeout;
+
+        loop {
+            let remaining = deadline.saturating_duration_since(std::time::Instant::now());
+            if remaining.is_zero() {
+                break;
+            }
+            match rx.recv_timeout(remaining) {
+                Ok(PtyEvent::Output { data }) => {
+                    let chunk = String::from_utf8_lossy(&data);
+                    output.push_str(&chunk);
+                    if predicate(&output) {
+                        break;
+                    }
+                }
+                Ok(PtyEvent::Exit { .. }) | Ok(PtyEvent::Error { .. }) => break,
+                Err(_) => break,
+            }
+        }
+
+        output
+    }
+
+    /// Collects events from the channel, tracking both output and exit status.
+    /// Returns (accumulated_output, did_exit).
+    fn collect_events(
+        rx: &mpsc::Receiver<PtyEvent>,
+        timeout: std::time::Duration,
+        stop_predicate: impl Fn(&str, bool) -> bool,
+    ) -> (String, bool) {
+        let mut output = String::new();
+        let mut exited = false;
+        let deadline = std::time::Instant::now() + timeout;
+
+        loop {
+            let remaining = deadline.saturating_duration_since(std::time::Instant::now());
+            if remaining.is_zero() {
+                break;
+            }
+            match rx.recv_timeout(remaining) {
+                Ok(PtyEvent::Output { data }) => {
+                    let chunk = String::from_utf8_lossy(&data);
+                    output.push_str(&chunk);
+                    if stop_predicate(&output, exited) {
+                        break;
+                    }
+                }
+                Ok(PtyEvent::Exit { .. }) => {
+                    exited = true;
+                    if stop_predicate(&output, exited) {
+                        break;
+                    }
+                }
+                Ok(PtyEvent::Error { message }) => {
+                    panic!("Unexpected error event from PTY: {message}");
+                }
+                Err(_) => break,
+            }
+        }
+
+        (output, exited)
+    }
+
+    // ===== User scenario tests: exactly mirror TerminalPanel behavior =====
+
+    /// Mirrors TerminalPanel.tsx spawn call: command=None, args=[], cwd=None, env={}
+    fn user_scenario_spawn_options() -> SpawnOptions {
+        SpawnOptions {
+            command: None, // Uses $SHELL (like TerminalPanel sends null)
+            args: vec![],  // Empty args (like TerminalPanel)
+            cwd: None,
+            env: HashMap::new(),
+            cols: 99, // Match typical terminal dimensions
+            rows: 57,
+        }
+    }
+
+    #[test]
+    fn test_user_scenario_spawn_succeeds() {
+        // Test: TerminalPanel calls ptySpawn({ command: null, args: [], ... })
+        // Expected: spawn succeeds without error
+        let mut manager = PtyManager::new();
+        let (channel, _rx) = test_channel();
+
+        let result = manager.spawn(user_scenario_spawn_options(), channel);
+        assert!(
+            result.is_ok(),
+            "Spawn with command=None (user scenario) should succeed, got: {result:?}"
+        );
+
+        let session_id = result.unwrap();
+        manager.kill(&session_id).unwrap();
+    }
+
+    #[test]
+    fn test_user_scenario_shell_stays_alive() {
+        // Test: After spawn, shell should NOT exit within 2 seconds.
+        // If this fails, the shell is crashing immediately after start.
+        // This matches the "연결 끊김" bug — Exit event arrives too soon.
+        let mut manager = PtyManager::new();
+        let (channel, rx) = test_channel();
+
+        let session_id = manager
+            .spawn(user_scenario_spawn_options(), channel)
+            .unwrap();
+
+        // Wait 2 seconds and check if Exit event was received
+        let (_, exited) = collect_events(
+            &rx,
+            std::time::Duration::from_secs(2),
+            |_, did_exit| did_exit, // stop immediately if Exit received
+        );
+
+        assert!(
+            !exited,
+            "Shell exited within 2 seconds of spawn! This causes the '연결 끊김' bug."
+        );
+
+        manager.kill(&session_id).unwrap();
+    }
+
+    #[test]
+    fn test_user_scenario_receives_prompt() {
+        // Test: After spawn with command=None, shell should produce output (prompt).
+        // This tests whether the user sees anything in the terminal.
+        let mut manager = PtyManager::new();
+        let (channel, rx) = test_channel();
+
+        let session_id = manager
+            .spawn(user_scenario_spawn_options(), channel)
+            .unwrap();
+
+        let (output, exited) =
+            collect_events(&rx, std::time::Duration::from_secs(3), |s, did_exit| {
+                !s.is_empty() || did_exit
+            });
+
+        assert!(
+            !exited,
+            "Shell exited before producing any output! Output so far: '{output}'"
+        );
+        assert!(
+            !output.is_empty(),
+            "Expected shell prompt or initial output, got nothing within 3 seconds"
+        );
+
+        manager.kill(&session_id).unwrap();
+    }
+
+    #[test]
+    fn test_user_scenario_command_execution() {
+        // Test: User types "echo hello" and presses Enter in the terminal.
+        // xterm.js sends \r for Enter key.
+        let mut manager = PtyManager::new();
+        let (channel, rx) = test_channel();
+
+        let session_id = manager
+            .spawn(user_scenario_spawn_options(), channel)
+            .unwrap();
+
+        // Wait for shell to initialize (prompt)
+        let (_, exited) = collect_events(&rx, std::time::Duration::from_secs(3), |s, did_exit| {
+            !s.is_empty() || did_exit
+        });
+        assert!(!exited, "Shell exited during initialization");
+
+        // User types "echo HELLO_WORLD" and presses Enter
+        let marker = "USER_CMD_MARKER_99";
+        manager
+            .write(&session_id, format!("echo {marker}\r").as_bytes())
+            .unwrap();
+
+        // Expect marker at least twice: echo (PTY echo-back) + command output
+        let (output, exited) =
+            collect_events(&rx, std::time::Duration::from_secs(3), |s, did_exit| {
+                s.matches(marker).count() >= 2 || did_exit
+            });
+
+        assert!(
+            !exited,
+            "Shell exited while processing command! Output: '{output}'"
+        );
+
+        let count = output.matches(marker).count();
+        assert!(
+            count >= 2,
+            "Command execution failed. Expected marker '{marker}' at least 2 times (echo + output), found {count}. Full output: '{output}'"
+        );
+
+        manager.kill(&session_id).unwrap();
+    }
+
+    #[test]
+    fn test_user_scenario_channel_continues_working() {
+        // Test: Channel keeps receiving events after spawn returns.
+        // This verifies the Channel doesn't get invalidated.
+        let mut manager = PtyManager::new();
+        let (channel, rx) = test_channel();
+
+        let session_id = manager
+            .spawn(user_scenario_spawn_options(), channel)
+            .unwrap();
+
+        // Wait for initial prompt
+        let (initial, exited) =
+            collect_events(&rx, std::time::Duration::from_secs(3), |s, did_exit| {
+                !s.is_empty() || did_exit
+            });
+        assert!(!exited, "Shell exited during startup");
+        assert!(!initial.is_empty(), "No initial output received");
+
+        // Wait a moment, then send a command — channel should still work
+        std::thread::sleep(std::time::Duration::from_millis(500));
+
+        let marker = "CHANNEL_ALIVE_CHECK";
+        manager
+            .write(&session_id, format!("echo {marker}\r").as_bytes())
+            .unwrap();
+
+        let (output, exited) =
+            collect_events(&rx, std::time::Duration::from_secs(3), |s, did_exit| {
+                s.contains(marker) || did_exit
+            });
+
+        assert!(
+            !exited,
+            "Shell exited after delay. Channel may have been invalidated. Output: '{output}'"
+        );
+        assert!(
+            output.contains(marker),
+            "Channel stopped receiving events after spawn returned. Output: '{output}'"
+        );
+
+        manager.kill(&session_id).unwrap();
+    }
+
+    // ===== Basic interactive shell tests (using /bin/sh for predictability) =====
+
+    #[test]
+    fn test_interactive_shell_produces_output_on_spawn() {
+        let mut manager = PtyManager::new();
+        let (channel, rx) = test_channel();
+
+        let session_id = manager.spawn(interactive_spawn_options(), channel).unwrap();
+
+        // Wait up to 3 seconds for ANY output (shell prompt, login message, etc.)
+        let output =
+            collect_output_until(&rx, std::time::Duration::from_secs(3), |s| !s.is_empty());
+
+        assert!(
+            !output.is_empty(),
+            "Expected some output from interactive shell (prompt, motd, etc.), got nothing"
+        );
+
+        manager.kill(&session_id).unwrap();
+    }
+
+    #[test]
+    fn test_interactive_command_execution() {
+        let mut manager = PtyManager::new();
+        let (channel, rx) = test_channel();
+
+        let session_id = manager.spawn(interactive_spawn_options(), channel).unwrap();
+
+        // Wait for shell initialization (prompt or any initial output)
+        collect_output_until(&rx, std::time::Duration::from_secs(3), |s| !s.is_empty());
+
+        // Send a command with carriage return (what xterm.js sends for Enter)
+        let marker = "PTYTEST_MARKER_12345";
+        manager
+            .write(&session_id, format!("echo {marker}\r").as_bytes())
+            .unwrap();
+
+        // Collect output until we see the marker at least twice:
+        // 1st occurrence: PTY echo of the typed command
+        // 2nd occurrence: actual command execution output
+        let output = collect_output_until(&rx, std::time::Duration::from_secs(3), |s| {
+            s.matches(marker).count() >= 2
+        });
+
+        let count = output.matches(marker).count();
+        assert!(
+            count >= 2,
+            "Expected marker '{marker}' at least 2 times (echo + execution), found {count} in output: {output}"
+        );
+
+        manager.kill(&session_id).unwrap();
+    }
+
+    #[test]
+    fn test_enter_key_triggers_execution() {
+        let mut manager = PtyManager::new();
+        let (channel, rx) = test_channel();
+
+        let session_id = manager.spawn(interactive_spawn_options(), channel).unwrap();
+
+        // Wait for shell initialization
+        collect_output_until(&rx, std::time::Duration::from_secs(3), |s| !s.is_empty());
+
+        // Test with \r (0x0D) — what xterm.js sends for Enter key
+        let marker_cr = "CR_MARKER_67890";
+        manager
+            .write(&session_id, format!("echo {marker_cr}\r").as_bytes())
+            .unwrap();
+
+        let output_cr = collect_output_until(&rx, std::time::Duration::from_secs(3), |s| {
+            s.matches(marker_cr).count() >= 2
+        });
+
+        let cr_count = output_cr.matches(marker_cr).count();
+        assert!(
+            cr_count >= 2,
+            "\\r (carriage return) should trigger command execution. Expected marker '{marker_cr}' at least 2 times, found {cr_count} in output: {output_cr}"
+        );
+
+        manager.kill(&session_id).unwrap();
+    }
+
     #[test]
     fn test_session_limit() {
         let mut manager = PtyManager::new();
