@@ -91,7 +91,7 @@ All Rust commands are typed via tauri-specta. After adding/changing Rust command
 - Prettier: 2 spaces, single quotes, no semicolons, trailing commas (es5), 80 char width
 - TypeScript strict mode with `noUncheckedIndexedAccess`
 - Path alias: `@/*` → `./src/*`
-- i18n: All user-facing strings in `/locales/*.json`, use CSS logical properties for RTL
+- i18n: All user-facing strings in `/locales/*.json` (en, ko)
 - Rust: `format!("{variable}")` (modern formatting), Tauri v2 APIs only
 
 ### Key Directories
@@ -99,6 +99,7 @@ All Rust commands are typed via tauri-specta. After adding/changing Rust command
 - `src/lib/commands/` — Centralized command system (actions for menus, shortcuts, command palette)
 - `src/store/` — Zustand stores (selector pattern enforced)
 - `src/hooks/` — Custom hooks (enforced by ast-grep to live here)
+- `src/components/terminal/` — xterm.js 터미널 UI (TerminalPanel, theme)
 - `src-tauri/src/commands/` — Rust Tauri commands
 - `docs/developer/` — 24+ architecture and pattern guides
 - `.ast-grep/rules/` — Custom lint rules (no store destructuring, hooks location, no stores in lib)
