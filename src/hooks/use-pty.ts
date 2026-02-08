@@ -91,7 +91,10 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
     const id = sessionIdRef.current
     if (!id) return
 
-    await commands.ptyKill(id)
+    const result = await commands.ptyKill(id)
+    if (result.status === 'error') {
+      console.error('[pty] kill failed:', result.error)
+    }
     sessionIdRef.current = null
     const { setSessionId, setConnectionStatus } = useTerminalStore.getState()
     setSessionId(null)
