@@ -1,0 +1,36 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(git mv:*)",
+      "Bash(tree:*)",
+      "Bash(cat:*)",
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:react-grid-layout.github.io)",
+      "Bash(npm run:*)",
+      "Bash(find:*)",
+      "Bash(pnpm run typecheck:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm run lint-fix:*)",
+      "mcp__figma-desktop__get_design_context",
+      "mcp__figma-desktop__get_screenshot",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(pnpm eslint:*)",
+      "Bash(npx tsx:*)",
+      "Bash(ls:*)",
+      "mcp__figma-desktop__get_variable_defs",
+      "Bash(pnpm exec tsx:*)",
+      "Bash(pnpm test:run:*)"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "/Users/choegihwan/Documents/Projects/Obsidian-frontend-journey"
+    ]
+  }
+}
