@@ -1,5 +1,6 @@
+import type { ComponentType } from 'react'
 import { cn } from '@/lib/utils'
-import { useUIStore } from '@/store/ui-store'
+import { useUIStore, type AppView } from '@/store/ui-store'
 import { WelcomeView } from '@/components/views/WelcomeView'
 import { SessionsView } from '@/components/views/SessionsView'
 import { ProjectsView } from '@/components/views/ProjectsView'
@@ -9,17 +10,16 @@ interface MainWindowContentProps {
   className?: string
 }
 
+const VIEW_MAP: Record<AppView, ComponentType> = {
+  welcome: WelcomeView,
+  sessions: SessionsView,
+  projects: ProjectsView,
+}
+
 function ActiveView() {
   const activeView = useUIStore(state => state.activeView)
-
-  switch (activeView) {
-    case 'sessions':
-      return <SessionsView />
-    case 'projects':
-      return <ProjectsView />
-    default:
-      return <WelcomeView />
-  }
+  const View = VIEW_MAP[activeView]
+  return <View />
 }
 
 export function MainWindowContent({
