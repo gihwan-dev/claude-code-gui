@@ -13,6 +13,7 @@ export function TerminalPanel() {
   const connectionStatus = useTerminalStore(state => state.connectionStatus)
 
   const writeRef = useRef<((data: string) => void) | null>(null)
+  const pendingOutputRef = useRef<string[]>([])
   const decoderRef = useRef(new TextDecoder('utf-8', { fatal: false }))
 
   // Auto-spawn PTY when terminal is ready
@@ -25,10 +26,16 @@ export function TerminalPanel() {
     resize: ptyResize,
   } = usePty({
     onData: data => {
-      writeRef.current?.(decoderRef.current.decode(data, { stream: true }))
+      const decoded = decoderRef.current.decode(data, { stream: true })
+      if (writeRef.current) {
+        writeRef.current(decoded)
+      } else {
+        pendingOutputRef.current.push(decoded)
+      }
     },
     onExit: () => {
       spawnedRef.current = false
+      pendingOutputRef.current = []
       // Reset decoder state for next session
       decoderRef.current = new TextDecoder('utf-8', { fatal: false })
     },
@@ -42,6 +49,12 @@ export function TerminalPanel() {
 
   useEffect(() => {
     writeRef.current = write
+    // Flush any output that arrived before terminal was ready
+    if (write && pendingOutputRef.current.length > 0) {
+      const pending = pendingOutputRef.current.join('')
+      pendingOutputRef.current = []
+      write(pending)
+    }
   }, [write])
 
   // Sync terminal resize to PTY

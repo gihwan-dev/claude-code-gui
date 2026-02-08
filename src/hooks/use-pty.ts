@@ -20,6 +20,8 @@ interface UsePtyReturn {
 
 export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
   const sessionIdRef = useRef<string | null>(null)
+  const channelRef = useRef<Channel<PtyEvent> | null>(null)
+  const exitedRef = useRef(false)
   const onDataRef = useRef(options.onData)
   const onExitRef = useRef(options.onExit)
 
@@ -37,16 +39,20 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
   const spawn = useCallback(async (spawnOptions: SpawnOptions) => {
     const { setSessionId, setConnectionStatus } = useTerminalStore.getState()
 
+    exitedRef.current = false
     setConnectionStatus('connecting')
 
     const channel = new Channel<PtyEvent>()
+    channelRef.current = channel
     channel.onmessage = event => {
       if (event.event === 'Output') {
         onDataRef.current?.(new Uint8Array(event.data.data))
       } else if (event.event === 'Exit') {
+        exitedRef.current = true
         setConnectionStatus('disconnected')
         setSessionId(null)
         sessionIdRef.current = null
+        channelRef.current = null
         onExitRef.current?.(event.data.code)
       } else if (event.event === 'Error') {
         setConnectionStatus('error')
@@ -55,6 +61,11 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
 
     const result = await commands.ptySpawn(channel, spawnOptions)
     if (result.status === 'ok') {
+      // Guard against race condition: if Exit event arrived during await,
+      // don't overwrite 'disconnected' status back to 'connected'
+      if (exitedRef.current) {
+        return
+      }
       sessionIdRef.current = result.data
       setSessionId(result.data)
       setConnectionStatus('connected')
