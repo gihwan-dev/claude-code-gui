@@ -8,7 +8,6 @@ This repository is a template with sensible defaults for building Tauri React ap
 
 ### New Sessions
 
-- Read @docs/tasks.md for task management
 - Review `docs/developer/architecture-guide.md` for high-level patterns
 - Check `docs/developer/README.md` for the full documentation index
 - Check git status and project structure
@@ -17,14 +16,14 @@ This repository is a template with sensible defaults for building Tauri React ap
 
 **CRITICAL:** Follow these strictly:
 
-0. **Use npm only**: This project uses `npm`, NOT `pnpm`. Always use `npm install`, `npm run`, etc.
+0. **Use pnpm only**: This project uses `pnpm` (locked at 10.29.1). Always use `pnpm install`, `pnpm run`, etc.
 1. **Read Before Editing**: Always read files first to understand context
 2. **Follow Established Patterns**: Use patterns from this file and `docs/developer`
 3. **Senior Architect Mindset**: Consider performance, maintainability, testability
 4. **Batch Operations**: Use multiple tool calls in single responses
 5. **Match Code Style**: Follow existing formatting and patterns
 6. **Test Coverage**: Write comprehensive tests for business logic
-7. **Quality Gates**: Run `npm run check:all` after significant changes
+7. **Quality Gates**: Run `pnpm check:all` after significant changes
 8. **No Dev Server**: Ask user to run and report back
 9. **No Unsolicited Commits**: Only when explicitly requested
 10. **Documentation**: Update relevant `docs/developer/` files for new patterns
@@ -130,7 +129,7 @@ These are specific to Claude Code but documented here for context.
 
 ### Commands
 
-- `/check` - Check work against architecture, run `npm run check:all`, suggest commit message
+- `/check` - Check work against architecture, run `pnpm check:all`, suggest commit message
 - `/cleanup` - Run static analysis (knip, jscpd, check:all), get structured recommendations
 - `/init` - One-time template initialization
 
